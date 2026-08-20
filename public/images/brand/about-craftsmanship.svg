@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900" role="img" aria-label="Craftsmanship">
+  <title>Craftsmanship</title>
+  
+      <rect width="1400" height="900" fill="#EFE8DF"/>
+      <rect x="210" y="180" width="979.9999999999999" height="495.00000000000006" fill="#F6F1EA"/>
+      <line x1="308" y1="315" x2="1092" y2="315" stroke="#C6A46A" stroke-width="1"/>
+      <line x1="308" y1="405" x2="910" y2="405" stroke="#B7A89A" stroke-width="1"/>
+      <line x1="308" y1="495.00000000000006" x2="979.9999999999999" y2="495.00000000000006" stroke="#B7A89A" stroke-width="1"/>
+      <rect x="308" y="558" width="252" height="36" fill="#356B5A"/>
+    
+  <text x="32" y="872" fill="#1F1F1F" font-family="Georgia,serif" font-size="22" opacity="0.85">Craftsmanship</text>
+  
+</svg>

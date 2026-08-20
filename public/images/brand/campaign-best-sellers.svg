@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-label="Best Sellers">
+  <title>Best Sellers</title>
+  
+      <rect width="1600" height="900" fill="#F6F1EA"/>
+      <rect width="608" height="900" fill="#1F1F1F"/>
+      <rect x="720" y="135" width="672" height="630" fill="#356B5A"/>
+      <rect x="880.0000000000001" y="252.00000000000003" width="448.00000000000006" height="396" fill="#EFE8DF" opacity="0.7"/>
+      <line x1="96" y1="648" x2="448.00000000000006" y2="648" stroke="#C6A46A" stroke-width="1.25"/>
+    
+  <text x="32" y="872" fill="#FFFFFF" font-family="Georgia,serif" font-size="22" opacity="0.85">Best Sellers</text>
+  
+</svg>

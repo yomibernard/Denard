@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920" role="img" aria-label="Best Sellers">
+  <title>Best Sellers</title>
+  
+      <rect width="1080" height="1920" fill="#1F1F1F"/>
+      <rect y="1056" width="1080" height="864" fill="#356B5A"/>
+      <text x="86.4" y="537.6" fill="#FFFFFF" font-family="Georgia,serif" font-size="97">Denard</text>
+      <text x="86.4" y="1344" fill="#FFFFFF" font-family="system-ui,sans-serif" font-size="49" font-weight="500">Best Sellers</text>
+    
+  
+  
+</svg>

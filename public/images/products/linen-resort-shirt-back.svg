@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200" role="img" aria-label="Back">
+  <title>Back</title>
+  
+      <rect width="900" height="1200" fill="#F6F1EA"/>
+      <rect x="180" y="144" width="540" height="840" fill="#d4b87e" opacity="0.85"/>
+      <rect x="252.00000000000003" y="264" width="396" height="600" fill="#B7A89A" opacity="0.35"/>
+      <rect x="198" y="1032" width="504.00000000000006" height="2" fill="#C6A46A" opacity="0.7"/>
+    
+  <text x="32" y="1172" fill="#1F1F1F" font-family="Georgia,serif" font-size="22" opacity="0.85">Back</text>
+  
+</svg>

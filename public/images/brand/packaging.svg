@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000" role="img" aria-label="Packaging">
+  <title>Packaging</title>
+  
+      <rect width="1000" height="1000" fill="#F6F1EA"/>
+      <rect x="280" y="220" width="440" height="520" fill="#1F1F1F"/>
+      <rect x="280" y="220" width="440" height="80" fill="#356B5A"/>
+      <text x="500" y="520" text-anchor="middle" fill="#C6A46A" font-family="Georgia,serif" font-size="28">Denard</text>
+      <rect x="380" y="780" width="240" height="3" fill="#C6A46A"/>
+    
+  <text x="32" y="972" fill="#1F1F1F" font-family="Georgia,serif" font-size="22" opacity="0.85">Packaging</text>
+  
+</svg>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-label="WhatsApp shopping">
+  <title>WhatsApp shopping</title>
+  
+      <rect width="1200" height="800" fill="#F6F1EA"/>
+      <rect x="96" y="96" width="600" height="608" fill="#1F1F1F"/>
+      <rect x="660" y="224.00000000000003" width="420" height="352" fill="#356B5A"/>
+      <circle cx="864" cy="400" r="64" fill="#FFFFFF" opacity="0.9"/>
+      <text x="864" y="416" text-anchor="middle" fill="#356B5A" font-family="system-ui,sans-serif" font-size="22" font-weight="600">wa</text>
+    
+  <text x="32" y="772" fill="#1F1F1F" font-family="Georgia,serif" font-size="22" opacity="0.85">WhatsApp shopping</text>
+  
+</svg>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="750" height="1100" viewBox="0 0 750 1100" role="img" aria-label="Denard hero">
+  <title>Denard</title>
+  <rect width="750" height="1100" fill="#F6F1EA"/>
+  <rect y="420" width="750" height="680" fill="#EFE8DF"/>
+  <rect x="90" y="480" width="570" height="520" fill="#7FAF9B" opacity="0.4"/>
+  <rect x="160" y="560" width="430" height="360" fill="#356B5A" opacity="0.28"/>
+  <line x1="60" y1="200" x2="280" y2="200" stroke="#C6A46A" stroke-width="1.5"/>
+  <text x="60" y="180" fill="#1F1F1F" font-family="Georgia,serif" font-size="42">Denard</text>
+</svg>

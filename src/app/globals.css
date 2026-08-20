@@ -1,26 +1,235 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Denard refined fashion palette */
+  --denard-ivory: #f6f1ea;
+  --denard-white: #ffffff;
+  --denard-charcoal: #1f1f1f;
+  --denard-charcoal-hover: #333333;
+  --denard-mint: #7faf9b;
+  --denard-mint-hover: #6a9b87;
+  --denard-mint-deep: #356b5a;
+  --denard-mint-deep-hover: #285244;
+  --denard-mint-soft: #e7f1ec;
+  --denard-gold: #9a7a3a;
+  --denard-taupe: #b7a89a;
+  --denard-amber: #f39c12;
+
+  /* Semantic aliases — ivory-led, charcoal-structured, mint-accented */
+  --denard-ink: var(--denard-charcoal);
+  --denard-ink-soft: #3f3a36;
+  --denard-muted: #5c554e;
+  --denard-line: #e5ddd3;
+  --denard-surface: var(--denard-white);
+  --denard-canvas: var(--denard-ivory);
+  --denard-sand: #efe8df;
+
+  /* Primary brand action = Deep Mint */
+  --denard-accent: var(--denard-mint-deep);
+  --denard-accent-hover: var(--denard-mint-deep-hover);
+  --denard-accent-soft: var(--denard-mint-soft);
+
+  /* Secondary button = Charcoal */
+  --denard-secondary: var(--denard-charcoal);
+  --denard-secondary-hover: var(--denard-charcoal-hover);
+  --denard-secondary-soft: #f0ece7;
+
+  --denard-copper: var(--denard-gold);
+  --denard-danger: #8a3b3b;
+  --denard-success: var(--denard-mint-deep);
+  --denard-warning: var(--denard-amber);
+  --denard-whatsapp: var(--denard-mint-deep);
+  --denard-whatsapp-hover: var(--denard-mint-deep-hover);
+
+  --denard-radius: 0px;
+  --denard-radius-lg: 2px;
+  --denard-shadow-soft: 0 1px 0 rgba(31, 31, 31, 0.04);
+  --header-h: 80px;
+
+  --background: var(--denard-canvas);
+  --foreground: var(--denard-ink);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ink: var(--denard-ink);
+  --color-ink-soft: var(--denard-ink-soft);
+  --color-muted: var(--denard-muted);
+  --color-line: var(--denard-line);
+  --color-surface: var(--denard-surface);
+  --color-canvas: var(--denard-canvas);
+  --color-sand: var(--denard-sand);
+  --color-ivory: var(--denard-ivory);
+  --color-mint: var(--denard-mint);
+  --color-mint-hover: var(--denard-mint-hover);
+  --color-mint-deep: var(--denard-mint-deep);
+  --color-mint-soft: var(--denard-mint-soft);
+  --color-accent: var(--denard-accent);
+  --color-accent-hover: var(--denard-accent-hover);
+  --color-accent-soft: var(--denard-accent-soft);
+  --color-secondary: var(--denard-secondary);
+  --color-secondary-hover: var(--denard-secondary-hover);
+  --color-secondary-soft: var(--denard-secondary-soft);
+  --color-gold: var(--denard-gold);
+  --color-copper: var(--denard-copper);
+  --color-amber: var(--denard-amber);
+  --color-taupe: var(--denard-taupe);
+  --color-danger: var(--denard-danger);
+  --color-success: var(--denard-success);
+  --color-whatsapp: var(--denard-whatsapp);
+  --color-whatsapp-hover: var(--denard-whatsapp-hover);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --shadow-soft: var(--denard-shadow-soft);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--denard-line);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display), "Times New Roman", ui-serif, Georgia, serif;
+  letter-spacing: -0.015em;
+  line-height: 1.12;
+  font-weight: 500;
+  color: var(--denard-ink);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: var(--denard-mint-soft);
+  color: var(--denard-ink);
+}
+
+.container-denard {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .container-denard {
+    padding-inline: 2rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container-denard {
+    padding-inline: 2.5rem;
+  }
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid var(--denard-mint-deep);
+  outline-offset: 2px;
+}
+
+.product-image-ratio {
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  background: var(--denard-ivory);
+}
+
+.product-image-square {
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: var(--denard-ivory);
+}
+
+.product-image-wide {
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: var(--denard-ivory);
+}
+
+.gold-rule {
+  border-color: var(--denard-gold);
+}
+
+.nav-link-premium {
+  position: relative;
+}
+
+.nav-link-premium::after {
+  content: "";
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 0.35rem;
+  height: 1px;
+  background: var(--denard-gold);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.2s ease;
+}
+
+.nav-link-premium:hover::after,
+.nav-link-premium[aria-current="page"]::after {
+  transform: scaleX(1);
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #ebe4da 25%, #f6f1ea 37%, #ebe4da 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-fade-up,
+  .skeleton,
+  .nav-link-premium::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }

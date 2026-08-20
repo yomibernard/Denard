@@ -1,0 +1,455 @@
+// Denard — WhatsApp-assisted ecommerce catalogue
+// Phase 1: discovery + enquiry. Schema ready for payments/accounts later.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  BUSINESS_OWNER
+  PRODUCT_MANAGER
+  CATALOGUE_ADMIN
+  SALES_REP
+  CUSTOMER_SERVICE
+  MARKETING
+  REPORTING
+}
+
+enum ProductStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum AvailabilityStatus {
+  IN_STOCK
+  LOW_STOCK
+  OUT_OF_STOCK
+  PREORDER
+  MADE_TO_ORDER
+}
+
+enum EnquiryStatus {
+  NEW
+  WHATSAPP_OPENED
+  CUSTOMER_CONTACTED
+  AVAILABILITY_CONFIRMED
+  AWAITING_PAYMENT
+  PAYMENT_CONFIRMED
+  PROCESSING
+  DISPATCHED
+  COMPLETED
+  CANCELLED
+}
+
+enum IntendedAction {
+  ENQUIRY
+  PAYMENT
+}
+
+enum PaymentStatus {
+  NONE
+  PENDING
+  CONFIRMED
+  FAILED
+  REFUNDED
+}
+
+enum DeliveryMethod {
+  DELIVERY
+  PICKUP
+  COURIER
+  TO_BE_CONFIRMED
+}
+
+enum DeviceType {
+  MOBILE
+  TABLET
+  DESKTOP
+  UNKNOWN
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         UserRole  @default(CATALOGUE_ADMIN)
+  phone        String?
+  active       Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  assignedEnquiries Enquiry[]  @relation("AssignedRep")
+  auditLogs         AuditLog[]
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  imageUrl    String?
+  bannerUrl   String?
+  seoTitle    String?
+  seoDescription String?
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  featured    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  categories Category[]
+  products   Product[]
+}
+
+model Category {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String   @unique
+  description    String?
+  imageUrl       String?
+  bannerUrl      String?
+  seoTitle       String?
+  seoDescription String?
+  sortOrder      Int      @default(0)
+  active         Boolean  @default(true)
+  featured       Boolean  @default(false)
+  filterConfig   String?  // JSON: allowed filter keys
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  parentId     String?
+  parent       Category?   @relation("CategoryTree", fields: [parentId], references: [id])
+  children     Category[]  @relation("CategoryTree")
+  products     ProductCategory[]
+}
+
+model Collection {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String   @unique
+  description    String?
+  imageUrl       String?
+  bannerUrl      String?
+  seoTitle       String?
+  seoDescription String?
+  sortOrder      Int      @default(0)
+  active         Boolean  @default(true)
+  featured       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  products ProductCollection[]
+}
+
+model Brand {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  logoUrl     String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+}
+
+model Colour {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  hex       String
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+
+  variants ProductVariant[]
+}
+
+model Size {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+
+  variants ProductVariant[]
+}
+
+model Material {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  active      Boolean  @default(true)
+
+  products ProductMaterial[]
+}
+
+model Tag {
+  id       String @id @default(cuid())
+  name     String
+  slug     String @unique
+  products ProductTag[]
+}
+
+model Product {
+  id               String             @id @default(cuid())
+  name             String
+  slug             String             @unique
+  sku              String             @unique
+  shortDescription String?
+  description      String?
+  specifications   String?            // JSON
+  careInstructions String?
+  sizeGuide        String?
+  price            Float
+  compareAtPrice   Float?
+  currency         String             @default("GBP")
+  status           ProductStatus      @default(DRAFT)
+  availability     AvailabilityStatus @default(IN_STOCK)
+  stockQty         Int?
+  isNew            Boolean            @default(false)
+  isFeatured       Boolean            @default(false)
+  isBestSeller     Boolean            @default(false)
+  isOnOffer        Boolean            @default(false)
+  videoUrl         String?
+  seoTitle         String?
+  seoDescription   String?
+  publishedAt      DateTime?
+  scheduledAt      DateTime?
+  viewCount        Int                @default(0)
+  enquiryCount     Int                @default(0)
+  sortOrder        Int                @default(0)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  brandId      String?
+  brand        Brand?      @relation(fields: [brandId], references: [id])
+
+  images       ProductImage[]
+  variants     ProductVariant[]
+  categories   ProductCategory[]
+  collections  ProductCollection[]
+  materials    ProductMaterial[]
+  tags         ProductTag[]
+  relatedFrom  ProductRelation[] @relation("ProductFrom")
+  relatedTo    ProductRelation[] @relation("ProductTo")
+  enquiryItems EnquiryItem[]
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  url       String
+  alt       String?
+  sortOrder Int     @default(0)
+  isPrimary Boolean @default(false)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model ProductVariant {
+  id           String             @id @default(cuid())
+  sku          String             @unique
+  name         String?
+  price        Float?
+  compareAtPrice Float?
+  stockQty     Int?
+  availability AvailabilityStatus @default(IN_STOCK)
+  active       Boolean            @default(true)
+  productId    String
+  product      Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+  colourId     String?
+  colour       Colour?            @relation(fields: [colourId], references: [id])
+  sizeId       String?
+  size         Size?              @relation(fields: [sizeId], references: [id])
+  enquiryItems EnquiryItem[]
+}
+
+model ProductCategory {
+  productId  String
+  categoryId String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, categoryId])
+}
+
+model ProductCollection {
+  productId    String
+  collectionId String
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@id([productId, collectionId])
+}
+
+model ProductMaterial {
+  productId  String
+  materialId String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  material   Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@id([productId, materialId])
+}
+
+model ProductTag {
+  productId String
+  tagId     String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([productId, tagId])
+}
+
+model ProductRelation {
+  id              String  @id @default(cuid())
+  fromProductId   String
+  toProductId     String
+  relationType    String  @default("related") // related | bought_together
+  sortOrder       Int     @default(0)
+  fromProduct     Product @relation("ProductFrom", fields: [fromProductId], references: [id], onDelete: Cascade)
+  toProduct       Product @relation("ProductTo", fields: [toProductId], references: [id], onDelete: Cascade)
+}
+
+model HomepageSection {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  title       String
+  subtitle    String?
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  configJson  String?  // JSON for section-specific settings
+  updatedAt   DateTime @updatedAt
+}
+
+model Banner {
+  id        String    @id @default(cuid())
+  title     String
+  subtitle  String?
+  imageUrl  String
+  linkUrl   String?
+  ctaLabel  String?
+  placement String    @default("home_hero")
+  active    Boolean   @default(true)
+  sortOrder Int       @default(0)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model Enquiry {
+  id                   String         @id @default(cuid())
+  reference            String         @unique
+  customerName         String
+  customerPhone        String
+  deliveryCity         String?
+  deliveryCountry      String?
+  deliveryMethod       DeliveryMethod @default(TO_BE_CONFIRMED)
+  note                 String?
+  estimatedTotal       Float          @default(0)
+  currency             String         @default("GBP")
+  intendedAction       IntendedAction @default(ENQUIRY)
+  status               EnquiryStatus  @default(NEW)
+  whatsappRedirected   Boolean        @default(false)
+  whatsappRedirectedAt DateTime?
+  paymentStatus        PaymentStatus  @default(NONE)
+  paymentMethod        String?
+  paymentReference     String?
+  amountPaid           Float?
+  paymentDate          DateTime?
+  source               String?
+  campaign             String?
+  pageSource           String?
+  deviceType           DeviceType     @default(UNKNOWN)
+  userAgent            String?
+  internalNotes        String?
+  salesOutcome         String?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  assignedToId String?
+  assignedTo   User?         @relation("AssignedRep", fields: [assignedToId], references: [id])
+  items        EnquiryItem[]
+}
+
+model EnquiryItem {
+  id             String          @id @default(cuid())
+  enquiryId      String
+  enquiry        Enquiry         @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product         @relation(fields: [productId], references: [id])
+  variantId      String?
+  variant        ProductVariant? @relation(fields: [variantId], references: [id])
+  productName    String
+  productSku     String
+  colourName     String?
+  sizeName       String?
+  variantLabel   String?
+  quantity       Int             @default(1)
+  unitPrice      Float
+  compareAtPrice Float?
+  lineTotal      Float
+  productUrl     String?
+  imageUrl       String?
+  optionsJson    String?
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  entityType String
+  entityId   String?
+  details    String?
+  createdAt  DateTime @default(now())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+}
+
+model AnalyticsEvent {
+  id         String   @id @default(cuid())
+  eventName  String
+  path       String?
+  productId  String?
+  categoryId String?
+  searchTerm String?
+  metaJson   String?
+  sessionId  String?
+  deviceType DeviceType @default(UNKNOWN)
+  createdAt  DateTime @default(now())
+
+  @@index([eventName])
+  @@index([createdAt])
+  @@index([searchTerm])
+}
+
+model PageContent {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  title          String
+  body           String
+  seoTitle       String?
+  seoDescription String?
+  updatedAt      DateTime @updatedAt
+}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480" role="img" aria-label="Compare up to four pieces">
+  <title>Compare up to four pieces</title>
+  
+      <rect width="640" height="480" fill="#F6F1EA"/>
+      <circle cx="320" cy="201.6" r="57.599999999999994" fill="none" stroke="#C6A46A" stroke-width="1.5"/>
+      <line x1="243.2" y1="297.6" x2="396.8" y2="297.6" stroke="#B7A89A" stroke-width="1.5"/>
+    
+  <text x="32" y="452" fill="#1F1F1F" font-family="Georgia,serif" font-size="22" opacity="0.85">Compare up to four pieces</text>
+  
+</svg>
