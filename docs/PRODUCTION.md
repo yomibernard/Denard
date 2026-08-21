@@ -136,7 +136,7 @@ Never run destructive reset commands against production.
 ## 6. Hosting notes (Next.js)
 
 - Prefer a Node host that supports the App Router and server routes (`/api/*`).
-- Admin UI and `/api/admin/*` are gated by middleware + JWT session cookie.
+- Admin UI and `/api/admin/*` are gated by `src/proxy.ts` + JWT session cookie.
 - Set `NEXT_PUBLIC_SITE_URL=https://denard.co.uk` so WhatsApp messages contain correct product links.
 - After DNS cutover, re-test one full enquiry on a real phone.
 - Monitor `/api/health` from your uptime provider.

@@ -22,7 +22,7 @@ async function sessionOk(token: string | undefined) {
   }
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith("/api/admin/login") || pathname.startsWith("/api/admin/logout") || pathname === "/admin/login") {
