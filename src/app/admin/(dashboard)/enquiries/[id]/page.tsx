@@ -5,7 +5,9 @@ import { MessageCircle } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { formatPrice } from "@/lib/utils";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { stripeConfigured } from "@/lib/stripe";
 import { EnquiryUpdateForm } from "@/components/admin/enquiry-update-form";
+import { EnquiryPaymentLinkPanel } from "@/components/admin/enquiry-payment-link";
 import { requireAdminPage } from "@/lib/admin-page";
 
 export const dynamic = "force-dynamic";
@@ -154,6 +156,21 @@ export default async function AdminEnquiryDetailPage({ params }: Props) {
                     : "—"}
                 </dd>
               </div>
+              {enquiry.paymentLinkUrl ? (
+                <div className="sm:col-span-2">
+                  <dt className="text-xs text-muted">Payment link</dt>
+                  <dd>
+                    <a
+                      href={enquiry.paymentLinkUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="break-all text-xs text-accent hover:underline"
+                    >
+                      {enquiry.paymentLinkUrl}
+                    </a>
+                  </dd>
+                </div>
+              ) : null}
             </dl>
           </section>
 
@@ -214,18 +231,26 @@ export default async function AdminEnquiryDetailPage({ params }: Props) {
           </section>
         </div>
 
-        <EnquiryUpdateForm
-          enquiryId={enquiry.id}
-          status={enquiry.status}
-          internalNotes={enquiry.internalNotes ?? ""}
-          assignedToId={enquiry.assignedToId ?? ""}
-          paymentStatus={enquiry.paymentStatus}
-          paymentMethod={enquiry.paymentMethod ?? ""}
-          paymentReference={enquiry.paymentReference ?? ""}
-          amountPaid={enquiry.amountPaid != null ? String(enquiry.amountPaid) : ""}
-          paymentDate={toLocalInput(enquiry.paymentDate)}
-          users={users}
-        />
+        <div className="space-y-4">
+          <EnquiryPaymentLinkPanel
+            enquiryId={enquiry.id}
+            paymentLinkUrl={enquiry.paymentLinkUrl}
+            stripeConfigured={stripeConfigured()}
+            estimatedTotalLabel={formatPrice(enquiry.estimatedTotal, enquiry.currency)}
+          />
+          <EnquiryUpdateForm
+            enquiryId={enquiry.id}
+            status={enquiry.status}
+            internalNotes={enquiry.internalNotes ?? ""}
+            assignedToId={enquiry.assignedToId ?? ""}
+            paymentStatus={enquiry.paymentStatus}
+            paymentMethod={enquiry.paymentMethod ?? ""}
+            paymentReference={enquiry.paymentReference ?? ""}
+            amountPaid={enquiry.amountPaid != null ? String(enquiry.amountPaid) : ""}
+            paymentDate={toLocalInput(enquiry.paymentDate)}
+            users={users}
+          />
+        </div>
       </div>
     </div>
   );

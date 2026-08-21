@@ -33,6 +33,8 @@ export function slugify(text: string) {
 }
 
 export function absoluteUrl(path = "") {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const fallback =
+    process.env.NODE_ENV === "production" ? "https://denard.co.uk" : "http://localhost:3000";
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? fallback;
   return `${base.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
 }

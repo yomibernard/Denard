@@ -12,6 +12,7 @@ type ProductRow = {
   price: number;
   status: string;
   availability: string;
+  stockQty: number | null;
   brand: { name: string } | null;
   department: { name: string } | null;
 };
@@ -86,7 +87,20 @@ export function ProductsTable({ products }: { products: ProductRow[] }) {
                     {p.status}
                   </span>
                 </td>
-                <td className="px-4 py-2.5 text-xs">{p.availability.replace(/_/g, " ")}</td>
+                <td className="px-4 py-2.5 text-xs">
+                  <span
+                    className={
+                      p.availability === "OUT_OF_STOCK" || p.availability === "LOW_STOCK"
+                        ? "font-medium text-amber"
+                        : ""
+                    }
+                  >
+                    {p.availability.replace(/_/g, " ")}
+                  </span>
+                  {p.stockQty != null ? (
+                    <span className="mt-0.5 block text-muted">Qty {p.stockQty}</span>
+                  ) : null}
+                </td>
                 <td className="px-4 py-2.5 tabular-nums">
                   {new Intl.NumberFormat("en-GB", {
                     style: "currency",

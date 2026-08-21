@@ -185,6 +185,11 @@ export async function getProductBySlug(slug: string) {
         },
         orderBy: { sortOrder: "asc" },
       },
+      reviews: {
+        where: { approved: true },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+      },
     },
   });
 }

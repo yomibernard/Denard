@@ -10,6 +10,10 @@ import {
   Settings,
   Users,
   LogOut,
+  FileText,
+  Home,
+  BarChart3,
+  Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ROLE_PERMISSIONS, type SessionUser } from "@/lib/permissions";
@@ -19,6 +23,10 @@ const NAV = [
   { href: "/admin/products", label: "Products", icon: Package, permission: "products" as const },
   { href: "/admin/catalogue", label: "Catalogue", icon: FolderTree, permission: "catalogue" as const },
   { href: "/admin/enquiries", label: "Enquiries", icon: MessageSquare, permission: "enquiries" as const },
+  { href: "/admin/reviews", label: "Reviews", icon: Star, permission: "products" as const },
+  { href: "/admin/content", label: "Content", icon: FileText, permission: "settings" as const },
+  { href: "/admin/homepage", label: "Homepage", icon: Home, permission: "settings" as const },
+  { href: "/admin/reports", label: "Reports", icon: BarChart3, permission: "reports" as const },
   { href: "/admin/settings", label: "Settings", icon: Settings, permission: "settings" as const },
   { href: "/admin/users", label: "Users", icon: Users, permission: "users" as const },
 ];

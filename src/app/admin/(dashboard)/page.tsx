@@ -11,6 +11,7 @@ export default async function AdminDashboardPage() {
     productCount,
     activeCount,
     oosCount,
+    lowStockCount,
     newEnquiries,
     topProducts,
     recentEnquiries,
@@ -18,6 +19,12 @@ export default async function AdminDashboardPage() {
     prisma.product.count(),
     prisma.product.count({ where: { status: "PUBLISHED" } }),
     prisma.product.count({ where: { availability: "OUT_OF_STOCK" } }),
+    prisma.product.count({
+      where: {
+        status: { not: "ARCHIVED" },
+        OR: [{ availability: "LOW_STOCK" }, { stockQty: { lte: 5, not: null } }],
+      },
+    }),
     prisma.enquiry.count({ where: { status: "NEW" } }),
     prisma.product.findMany({
       where: { enquiryCount: { gt: 0 } },
@@ -35,7 +42,8 @@ export default async function AdminDashboardPage() {
   const stats = [
     { label: "Products", value: productCount, href: "/admin/products" },
     { label: "Published", value: activeCount, href: "/admin/products?status=PUBLISHED" },
-    { label: "Out of stock", value: oosCount, href: "/admin/products" },
+    { label: "Low stock", value: lowStockCount, href: "/admin/products?stock=low" },
+    { label: "Out of stock", value: oosCount, href: "/admin/products?stock=oos" },
     { label: "New enquiries", value: newEnquiries, href: "/admin/enquiries?status=NEW" },
   ];
 
@@ -46,7 +54,7 @@ export default async function AdminDashboardPage() {
         <p className="mt-1 text-sm text-muted">Catalogue and enquiry overview</p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {stats.map((s) => (
           <Link
             key={s.label}

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { clientIp, rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +10,19 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
+  const limit = 8;
+  const rl = rateLimit({
+    key: `newsletter:${clientIp(request)}`,
+    limit,
+    windowMs: 60_000,
+  });
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again shortly." },
+      { status: 429, headers: rateLimitHeaders(rl, limit) },
+    );
+  }
+
   const contentType = request.headers.get("content-type") ?? "";
   let email = "";
 
@@ -38,7 +52,6 @@ export async function POST(request: Request) {
     },
   });
 
-  // Maintain a simple comma-separated list in SiteSetting
   const key = "newsletter_emails";
   const existing = await prisma.siteSetting.findUnique({ where: { key } });
   const list = existing?.value
@@ -55,7 +68,7 @@ export async function POST(request: Request) {
 
   const referer = request.headers.get("referer");
   if (contentType.includes("application/json")) {
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true }, { headers: rateLimitHeaders(rl, limit) });
   }
 
   const redirectTo = referer || "/";

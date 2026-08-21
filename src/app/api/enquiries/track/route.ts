@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { clientIp, rateLimit, rateLimitHeaders } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -40,8 +41,25 @@ async function lookup(reference: string, phone: string) {
   };
 }
 
+function enforceLimit(request: Request) {
+  const limit = 30;
+  const rl = rateLimit({
+    key: `track:${clientIp(request)}`,
+    limit,
+    windowMs: 60_000,
+  });
+  return { limit, rl };
+}
+
 export async function POST(request: Request) {
   try {
+    const { limit, rl } = enforceLimit(request);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: "Too many lookups. Please wait a minute." },
+        { status: 429, headers: rateLimitHeaders(rl, limit) },
+      );
+    }
     const body = await request.json();
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
@@ -51,13 +69,20 @@ export async function POST(request: Request) {
     if (!result) {
       return NextResponse.json({ error: "Enquiry not found" }, { status: 404 });
     }
-    return NextResponse.json(result);
+    return NextResponse.json(result, { headers: rateLimitHeaders(rl, limit) });
   } catch {
     return NextResponse.json({ error: "Lookup failed" }, { status: 500 });
   }
 }
 
 export async function GET(request: Request) {
+  const { limit, rl } = enforceLimit(request);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Too many lookups. Please wait a minute." },
+      { status: 429, headers: rateLimitHeaders(rl, limit) },
+    );
+  }
   const { searchParams } = new URL(request.url);
   const reference = searchParams.get("reference") ?? "";
   const phone = searchParams.get("phone") ?? "";
@@ -69,5 +94,5 @@ export async function GET(request: Request) {
   if (!result) {
     return NextResponse.json({ error: "Enquiry not found" }, { status: 404 });
   }
-  return NextResponse.json(result);
+  return NextResponse.json(result, { headers: rateLimitHeaders(rl, limit) });
 }

@@ -1,19 +1,19 @@
 import "dotenv/config";
-import path from "node:path";
 import bcrypt from "bcryptjs";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 
-const url = process.env.DATABASE_URL ?? "file:./dev.db";
-const dbPath = url.startsWith("file:")
-  ? path.resolve(process.cwd(), url.replace(/^file:/, ""))
-  : url;
-const adapter = new PrismaBetterSqlite3({ url: dbPath });
-const prisma = new PrismaClient({ adapter });
+const connectionString = process.env.DATABASE_URL ?? "";
+if (!connectionString || !/^postgres(ql)?:\/\//i.test(connectionString)) {
+  throw new Error("DATABASE_URL must be a PostgreSQL connection string");
+}
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({ connectionString }),
+});
 
 async function main() {
   console.log("Seeding Denard catalogue...");
-  console.log("DB:", dbPath);
+  console.log("DB:", connectionString.replace(/:[^:@/]+@/, ":***@"));
 
   await prisma.analyticsEvent.deleteMany();
   await prisma.enquiryItem.deleteMany();
@@ -46,19 +46,19 @@ async function main() {
   await prisma.user.createMany({
     data: [
       {
-        email: process.env.ADMIN_DEFAULT_EMAIL ?? "admin@denard.com",
+        email: process.env.ADMIN_DEFAULT_EMAIL ?? "admin@denard.co.uk",
         passwordHash,
         name: "Denard Admin",
         role: "SUPER_ADMIN",
       },
       {
-        email: "sales@denard.com",
+        email: "sales@denard.co.uk",
         passwordHash,
         name: "Sales Representative",
         role: "SALES_REP",
       },
       {
-        email: "catalogue@denard.com",
+        email: "catalogue@denard.co.uk",
         passwordHash,
         name: "Catalogue Manager",
         role: "CATALOGUE_ADMIN",
@@ -94,8 +94,9 @@ async function main() {
       { key: "why_denard", title: "Why Shop with Denard", sortOrder: 9 },
       { key: "testimonials", title: "Customer Stories", sortOrder: 10 },
       { key: "delivery", title: "Delivery & Service", sortOrder: 11 },
-      { key: "whatsapp", title: "WhatsApp Assistance", sortOrder: 12 },
-      { key: "newsletter", title: "Product Updates", sortOrder: 13 },
+      {key: "whatsapp", title: "WhatsApp Assistance", sortOrder: 12 },
+      { key: "instagram", title: "Instagram / UGC", sortOrder: 13 },
+      { key: "newsletter", title: "Product Updates", sortOrder: 14 },
     ],
   });
 
@@ -451,7 +452,7 @@ async function main() {
     },
   ];
 
-  const createdProducts = [];
+  const createdProducts: Array<{ id: string; hue: string }> = [];
   for (const [index, p] of products.entries()) {
     const product = await prisma.product.create({
       data: {
@@ -538,63 +539,62 @@ async function main() {
     createdProducts.push({ ...product, hue: p.hue });
   }
 
+  const relationPairs: Array<[number, number, string]> = [
+    [0, 1, "related"],
+    [0, 3, "bought_together"],
+    [2, Math.min(8, createdProducts.length - 1), "related"],
+    [Math.min(7, createdProducts.length - 1), Math.min(9, createdProducts.length - 1), "bought_together"],
+  ];
   await prisma.productRelation.createMany({
-    data: [
-      { fromProductId: createdProducts[0].id, toProductId: createdProducts[1].id, relationType: "related" },
-      {
-        fromProductId: createdProducts[0].id,
-        toProductId: createdProducts[3].id,
-        relationType: "bought_together",
-      },
-      { fromProductId: createdProducts[2].id, toProductId: createdProducts[8].id, relationType: "related" },
-      {
-        fromProductId: createdProducts[7].id,
-        toProductId: createdProducts[9].id,
-        relationType: "bought_together",
-      },
-    ],
+    data: relationPairs
+      .filter(([a, b]) => a !== b && createdProducts[a] && createdProducts[b])
+      .map(([a, b, relationType]) => ({
+        fromProductId: createdProducts[a].id,
+        toProductId: createdProducts[b].id,
+        relationType,
+      })),
   });
 
   const pages: Array<{ slug: string; title: string; body: string }> = [
     {
       slug: "about",
       title: "About Denard",
-      body: "Denard is a premium contemporary fashion company based in England, United Kingdom. We help customers discover quality products online and complete their purchase with personal guidance on WhatsApp — honest information, careful fulfilment, and service that feels human. Timeless style, curated for life.",
+      body: "Denard is a premium contemporary fashion and jewellery house based in England, United Kingdom.\n\nWe help customers discover carefully curated pieces online and complete their purchase with personal guidance on WhatsApp — honest product information, clear GBP pricing guidance, careful fulfilment, and service that feels human.\n\nTimeless style, curated for life.",
     },
     {
       slug: "delivery",
       title: "Delivery Information",
-      body: "Delivery options and timelines are confirmed with you on WhatsApp after your enquiry. We serve major cities and can arrange courier or pickup depending on your location. You will receive clear cost and timing before payment.",
+      body: "UK delivery\nWe arrange UK mainland delivery after confirming your address on WhatsApp. Courier options, costs and estimated timing are shared before you pay — nothing is charged until you approve.\n\nCollection\nWhere offered, collection from an agreed UK location may be available. Details are confirmed on WhatsApp with your enquiry reference.\n\nInternational\nInternational shipping is arranged case by case. Duties, taxes and longer transit times may apply and will be explained before payment.\n\nTracking\nOnce dispatched, tracking details are sent on WhatsApp. Keep your DEN- reference handy for any follow-up.",
     },
     {
       slug: "how-to-order",
       title: "How to Order",
-      body: "1. Browse or search for products.\n2. Select options such as colour and size.\n3. Add items to your enquiry list.\n4. Send your enquiry on WhatsApp.\n5. A Denard representative confirms availability, total cost, payment and delivery.",
+      body: "1. Browse or search for products on https://denard.co.uk.\n2. Select options such as colour and size where shown.\n3. Add items to your enquiry bag, or enquire on a single product.\n4. Send your enquiry on WhatsApp — you receive a DEN-YEAR-###### reference.\n5. A Denard representative confirms availability, total cost, payment method and delivery.\n6. Track progress anytime at https://denard.co.uk/track using your reference and phone number.\n\nCard payment links may be sent on WhatsApp after availability is confirmed.",
     },
     {
       slug: "faq",
       title: "Frequently Asked Questions",
-      body: "Q: Do I pay on the website?\nA: Not in this phase. Payment details are shared securely through WhatsApp after availability is confirmed.\n\nQ: How fast will you respond?\nA: During service hours we typically respond within 30 minutes.\n\nQ: Can I order multiple products?\nA: Yes. Use the enquiry basket and send one combined request.",
+      body: "Q: Do you take online payments on the website?\nA: Not in this phase. After your enquiry, our team confirms availability and shares secure payment instructions on WhatsApp. We never ask for card details via the public site forms.\n\nQ: How does WhatsApp ordering work?\nA: Browse products, choose colour/size where needed, add items to your enquiry basket, then send. You receive a DEN-YEAR-###### reference so you can track the conversation.\n\nQ: Are prices final?\nA: Displayed prices are a guide in GBP. Final totals may include delivery or stock changes confirmed with you before payment.\n\nQ: What about delivery across the UK?\nA: We arrange UK delivery after confirming your address on WhatsApp. Cost and timing depend on courier and location — you approve before paying.\n\nQ: Can I return or exchange?\nA: Yes for eligible unused items in original condition. Contact us on WhatsApp with your enquiry reference within the window agreed at purchase. See Returns for detail.\n\nQ: Do you ship internationally?\nA: International options are arranged case by case on WhatsApp. Duties and longer transit times may apply.\n\nQ: How do I know jewellery materials and authenticity?\nA: Product pages describe finishes and materials. Ask on WhatsApp for care advice, plating details or gift packaging.\n\nQ: Can I track my enquiry?\nA: Yes — use Track enquiry with your DEN-YEAR-###### reference and the phone number you submitted.\n\nQ: What are your service hours?\nA: Typically Monday–Saturday, 09:00–18:00 UK time. Messages outside hours are answered on the next working day.",
     },
     {
       slug: "privacy",
       title: "Privacy Policy",
-      body: "We collect only the information needed to process your enquiry — such as your name, phone number and delivery location. We do not request card details through the website. Contact us to update or remove your information.",
+      body: "Who we are\nDenard (“we”, “us”) operates this website and WhatsApp-assisted enquiry service from England, United Kingdom. Contact: hello@denard.co.uk or WhatsApp +44 7887 539426.\n\nWhat we collect\nWhen you enquire we typically collect your name, phone number, optional delivery city/country, product interest, and any note you provide. If you join the newsletter we store your email. The site may also record anonymous or pseudonymous analytics events (pages viewed, searches) to improve the shop.\n\nWhy we use it\nWe use this information to respond to your enquiry, confirm availability and fulfilment, improve the catalogue experience, and (if you opted in) send occasional marketing emails. Legal bases under UK GDPR typically include steps prior to a contract and our legitimate interests in operating a boutique enquiry service. Marketing emails rely on consent where required.\n\nSharing\nWe do not sell your personal data. We may share details with couriers or payment providers only as needed to complete an order you have agreed, and with service providers who host this site or our database under appropriate agreements.\n\nRetention\nEnquiry records are kept as long as needed for customer service, accounting and dispute handling, then deleted or anonymised. You may ask us to update or erase your details where the law allows.\n\nYour rights\nYou may request access, correction, erasure, restriction, or objection, and complain to the UK Information Commissioner’s Office (ico.org.uk). Contact us on WhatsApp or email to exercise these rights.\n\nCookies\nWe use essential cookies for the admin session and may use analytics cookies only after consent where required. See the cookie banner on the site.\n\nThis policy is a practical summary for a WhatsApp-enquiry boutique and is not a substitute for solicitor-reviewed terms if you trade at scale.",
     },
     {
       slug: "terms",
       title: "Terms and Conditions",
-      body: "Product availability and pricing displayed on the website are indicative and confirmed during the WhatsApp conversation. Denard reserves the right to correct errors and update catalogue information.",
+      body: "About these terms\nThese terms cover use of the Denard website and WhatsApp enquiry process for customers in the United Kingdom. By browsing or submitting an enquiry you agree to them.\n\nCatalogue information\nProduct descriptions, images and displayed GBP prices are indicative. Availability, final price, delivery cost and payment method are confirmed with you on WhatsApp before you pay. We may correct errors and update the catalogue at any time.\n\nEnquiries are not online checkout\nSubmitting an enquiry or opening WhatsApp does not create a binding purchase until we confirm availability and you accept the agreed total and payment instructions.\n\nPayment\nCard or bank payment is arranged offline (for example bank transfer or a secure payment link shared on WhatsApp). Never send card numbers in public website forms.\n\nDelivery & risk\nDelivery options and timing are agreed case by case. Risk in goods usually passes on delivery to the address you provide, unless otherwise agreed.\n\nCancellations & returns\nSee our Returns page. Statutory UK consumer rights for distance selling may apply where relevant; we will explain the process for your order on WhatsApp.\n\nLimitation\nTo the extent permitted by law, Denard is not liable for indirect or consequential loss arising from catalogue browsing or delayed replies outside service hours. Nothing excludes liability that cannot be limited under UK law.\n\nGoverning law\nThese terms are governed by the laws of England and Wales. Courts of England and Wales have exclusive jurisdiction, without prejudice to mandatory consumer protections.\n\nHave a solicitor review this text before relying on it for regulated or high-volume trading.",
     },
     {
       slug: "returns",
       title: "Returns and Exchange Policy",
-      body: "Eligible returns and exchanges are arranged through WhatsApp with your enquiry reference. Items must be unused and in original condition unless otherwise agreed. Specific windows depend on product category.",
+      body: "We want you to feel confident in every piece.\n\nEligible returns\nUnused items in original condition and packaging may be returned or exchanged when agreed on WhatsApp, quoting your DEN- enquiry reference. Windows and any restocking notes are confirmed at purchase and may vary by category (for example jewellery hygiene rules).\n\nHow to start\nMessage us on WhatsApp with your reference, reason, and photos if asked. Do not post items back until we confirm the address and process.\n\nRefunds\nWhere a refund is agreed, it is issued to the original payment method once we receive and check the item. Delivery charges may be non-refundable unless the goods were faulty or misdescribed.\n\nFaulty or incorrect items\nContact us promptly. We will arrange a repair, replacement or refund in line with UK consumer law where it applies.\n\nThis summary supports a WhatsApp-led boutique and should be reviewed by your adviser for final trading terms.",
     },
     {
       slug: "contact",
       title: "Contact Us",
-      body: "Message us on WhatsApp at +44 7887 539426, email hello@denard.co.uk, or visit us in England, United Kingdom during service hours. We are here to help with product questions, availability and fulfilment.",
+      body: "WhatsApp: +44 7887 539426\nEmail: hello@denard.co.uk\nLocation: England, United Kingdom\nService hours: Monday–Saturday, 09:00–18:00 UK time\n\nFor product questions, availability, delivery or an existing enquiry, WhatsApp is fastest — include your DEN- reference if you have one.",
     },
   ];
 

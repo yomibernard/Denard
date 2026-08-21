@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { ProductForm } from "@/components/admin/product-form";
 import { ProductImageManager } from "@/components/admin/product-image-manager";
+import { formatVariantsText } from "@/lib/product-admin";
 import { requireAdminPage } from "@/lib/admin-page";
 
 export const dynamic = "force-dynamic";
@@ -18,10 +19,19 @@ export async function generateMetadata({ params }: Props) {
 export default async function EditProductPage({ params }: Props) {
   await requireAdminPage("products");
   const { id } = await params;
-  const [product, departments, brands, images] = await Promise.all([
-    prisma.product.findUnique({ where: { id } }),
+  const [product, departments, brands, categories, collections, images] = await Promise.all([
+    prisma.product.findUnique({
+      where: { id },
+      include: {
+        categories: true,
+        collections: true,
+        variants: { include: { colour: true, size: true }, orderBy: { sku: "asc" } },
+      },
+    }),
     prisma.department.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
     prisma.brand.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.category.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.collection.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
     prisma.productImage.findMany({
       where: { productId: id },
       orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
@@ -48,6 +58,8 @@ export default async function EditProductPage({ params }: Props) {
       <ProductForm
         departments={departments}
         brands={brands}
+        categories={categories}
+        collections={collections}
         initial={{
           id: product.id,
           name: product.name,
@@ -57,6 +69,10 @@ export default async function EditProductPage({ params }: Props) {
           compareAtPrice: product.compareAtPrice,
           shortDescription: product.shortDescription ?? "",
           description: product.description ?? "",
+          careInstructions: product.careInstructions ?? "",
+          sizeGuide: product.sizeGuide ?? "",
+          metaTitle: product.seoTitle ?? "",
+          metaDescription: product.seoDescription ?? "",
           status: product.status,
           availability: product.availability,
           stockQty: product.stockQty,
@@ -66,6 +82,9 @@ export default async function EditProductPage({ params }: Props) {
           isOnOffer: product.isOnOffer,
           departmentId: product.departmentId ?? "",
           brandId: product.brandId ?? "",
+          categoryIds: product.categories.map((c) => c.categoryId),
+          collectionIds: product.collections.map((c) => c.collectionId),
+          variantsText: formatVariantsText(product.variants),
         }}
       />
     </div>

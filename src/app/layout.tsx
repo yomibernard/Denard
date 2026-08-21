@@ -21,7 +21,7 @@ const display = Cormorant_Garamond({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://denard.co.uk";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -68,7 +68,11 @@ const orgLd = organizationJsonLd({
 });
 
 const localLd = localBusinessJsonLd({
-  phone: "+447887539426",
+  phone: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER
+    ? `+${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER.replace(/\D/g, "")}`
+    : process.env.NEXT_PUBLIC_WHATSAPP_PHONE
+      ? `+${process.env.NEXT_PUBLIC_WHATSAPP_PHONE.replace(/\D/g, "")}`
+      : "+447887539426",
   email: "hello@denard.co.uk",
   address: "England, United Kingdom",
   hours: "Mo-Sa 09:00-18:00",

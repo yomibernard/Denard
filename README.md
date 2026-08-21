@@ -1,12 +1,13 @@
 # Denard — WhatsApp-assisted ecommerce
 
-Premium, mobile-first product catalogue with WhatsApp enquiry ordering. Phase one: discover, filter, enquire. Payments and full checkout are architected for later phases.
+Premium, mobile-first product catalogue with WhatsApp enquiry ordering. Phase one: discover, filter, enquire. Card checkout is prepared for a later phase.
 
 ## Stack
 
 - Next.js 16 (App Router) + TypeScript
 - Tailwind CSS 4
-- Prisma 7 + SQLite (local) — swap to PostgreSQL for production
+- Prisma 7 + **PostgreSQL**
+- S3-compatible media uploads (R2/S3) with local fallback for development
 - Zustand (enquiry basket, wishlist, compare, recently viewed)
 - José JWT sessions for admin auth
 
@@ -15,39 +16,47 @@ Premium, mobile-first product catalogue with WhatsApp enquiry ordering. Phase on
 ```bash
 npm install
 cp .env.example .env
-npm run db:setup
+npm run db:up          # Docker Postgres on localhost:55432
+npm run db:setup       # push schema + seed
 npm run dev
 ```
 
 - Storefront: http://localhost:3000
 - Admin: http://localhost:3000/admin/login
-- Default admin: `admin@denard.com` / `DenardAdmin2026!` (change in `.env`)
+- Default admin: `admin@denard.co.uk` (set in `.env`) — **change password immediately**
 
-Set `WHATSAPP_PHONE` (E.164 without `+`) in `.env` or Admin → Settings.
+Set WhatsApp digits in `.env` (`NEXT_PUBLIC_WHATSAPP_NUMBER`) or Admin → Settings.
+
+## Production
+
+Live domain: **https://denard.co.uk**
+
+See **[docs/PRODUCTION.md](docs/PRODUCTION.md)** for hosting, secrets, S3/R2 media, and backups.  
+Owner day-to-day ops: **[docs/OWNER.md](docs/OWNER.md)**.
 
 ## Key customer journeys
 
-1. Browse departments / categories / collections (nav from live catalogue)
+1. Browse departments / categories / collections
 2. Search, filter, sort on listing pages
-3. Open PDP, select options, add to enquiry basket
-4. Submit enquiry → unique reference (`DEN-2026-000001`) → WhatsApp message
+3. Open PDP, select options, add to enquiry bag or WhatsApp
+4. Submit enquiry → reference (`DEN-2026-000001`) → WhatsApp message
 5. Track enquiry status at `/track`
 
 ## Admin
 
-Role-based portal for products, catalogue, enquiries, settings, and users.
+Role-based portal for products (categories/collections/variants), catalogue, enquiries, settings, and staff users (create / reset / change password).
+
+## Useful scripts
+
+```bash
+npm run merch:photos      # feature photo products; demote SVG placeholders
+npm run smoke:enquiry     # DB-level enquiry → WhatsApp URL smoke test
+npm run db:jewelry        # jewellery seed extras
+```
 
 ## Docs
 
-See `docs/` for architecture, roadmap, security, SEO, analytics, and launch checklist.
-
-## Scripts
-
-| Script | Purpose |
-|--------|---------|
-| `npm run dev` | Development server |
-| `npm run build` | Production build |
-| `npm run db:push` | Sync Prisma schema |
-| `npm run db:seed` | Seed catalogue + admin users |
-| `npm run db:setup` | Push + seed |
-| `node scripts/generate-images.mjs` | Regenerate SVG placeholders |
+- `docs/PRODUCT.md` — product vision
+- `docs/BRAND.md` — brand system
+- `docs/OWNER.md` — owner runbook
+- `docs/PRODUCTION.md` — deploy & backups

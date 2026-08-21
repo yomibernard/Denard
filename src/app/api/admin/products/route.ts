@@ -1,7 +1,18 @@
 import { prisma } from "@/lib/db";
 import { isSession, jsonError, jsonOk, requireAdmin } from "@/lib/admin-api";
 import { slugify } from "@/lib/utils";
+import {
+  parseVariantsText,
+  syncProductCategories,
+  syncProductCollections,
+  syncProductVariants,
+} from "@/lib/product-admin";
 import type { AvailabilityStatus, ProductStatus } from "@/generated/prisma/client";
+
+function asIdList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map(String).filter(Boolean);
+}
 
 export async function GET(request: Request) {
   const session = await requireAdmin("products");
@@ -18,9 +29,9 @@ export async function GET(request: Request) {
     ...(q
       ? {
           OR: [
-            { name: { contains: q } },
-            { sku: { contains: q } },
-            { slug: { contains: q } },
+            { name: { contains: q, mode: "insensitive" as const } },
+            { sku: { contains: q, mode: "insensitive" as const } },
+            { slug: { contains: q, mode: "insensitive" as const } },
           ],
         }
       : {}),
@@ -64,9 +75,16 @@ export async function POST(request: Request) {
         slug,
         sku,
         price,
-        compareAtPrice: body.compareAtPrice != null && body.compareAtPrice !== "" ? Number(body.compareAtPrice) : null,
+        compareAtPrice:
+          body.compareAtPrice != null && body.compareAtPrice !== ""
+            ? Number(body.compareAtPrice)
+            : null,
         shortDescription: body.shortDescription ? String(body.shortDescription) : null,
         description: body.description ? String(body.description) : null,
+        careInstructions: body.careInstructions ? String(body.careInstructions) : null,
+        sizeGuide: body.sizeGuide ? String(body.sizeGuide) : null,
+        seoTitle: body.metaTitle ? String(body.metaTitle) : null,
+        seoDescription: body.metaDescription ? String(body.metaDescription) : null,
         status: (body.status as ProductStatus) || "DRAFT",
         availability: (body.availability as AvailabilityStatus) || "IN_STOCK",
         stockQty: body.stockQty != null && body.stockQty !== "" ? Number(body.stockQty) : null,
@@ -80,7 +98,22 @@ export async function POST(request: Request) {
       },
     });
 
-    return jsonOk({ product }, { status: 201 });
+    await syncProductCategories(product.id, asIdList(body.categoryIds));
+    await syncProductCollections(product.id, asIdList(body.collectionIds));
+    if (typeof body.variantsText === "string" && body.variantsText.trim()) {
+      await syncProductVariants(product.id, parseVariantsText(body.variantsText), price);
+    }
+
+    const full = await prisma.product.findUnique({
+      where: { id: product.id },
+      include: {
+        categories: true,
+        collections: true,
+        variants: true,
+      },
+    });
+
+    return jsonOk({ product: full }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Create failed";
     if (message.includes("Unique constraint")) return jsonError("Slug or SKU already exists", 409);

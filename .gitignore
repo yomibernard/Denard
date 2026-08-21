@@ -38,8 +38,9 @@ yarn-error.log*
 *.db
 *.db-journal
 
-# uploaded product media (keep folder)
-/public/uploads/products/**
+# uploaded media (local fallback — use S3/R2 in production)
+/public/uploads/**
+!/public/uploads/.gitkeep
 !/public/uploads/products/.gitkeep
 
 # vercel

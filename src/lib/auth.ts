@@ -9,7 +9,22 @@ export type { SessionUser };
 export { ROLE_PERMISSIONS };
 
 const COOKIE = "denard_admin_session";
-const secret = () => new TextEncoder().encode(process.env.AUTH_SECRET ?? "dev-secret");
+
+function authSecretBytes() {
+  const value = process.env.AUTH_SECRET?.trim();
+  if (!value || value === "dev-secret" || value.length < 32) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "AUTH_SECRET must be set to a random string of at least 32 characters in production.",
+      );
+    }
+    console.warn(
+      "[denard] AUTH_SECRET is missing or weak. Set a 32+ character secret before production.",
+    );
+    return new TextEncoder().encode(value && value.length >= 16 ? value : "dev-only-insecure-secret");
+  }
+  return new TextEncoder().encode(value);
+}
 
 export async function hashPassword(password: string) {
   return bcrypt.hash(password, 12);
@@ -17,6 +32,16 @@ export async function hashPassword(password: string) {
 
 export async function verifyPassword(password: string, hash: string) {
   return bcrypt.compare(password, hash);
+}
+
+export function assertStrongPassword(password: string) {
+  if (password.length < 10) {
+    return "Password must be at least 10 characters.";
+  }
+  if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+    return "Password must include letters and numbers.";
+  }
+  return null;
 }
 
 export async function createSession(user: SessionUser) {
@@ -29,7 +54,7 @@ export async function createSession(user: SessionUser) {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d")
-    .sign(secret());
+    .sign(authSecretBytes());
 
   const jar = await cookies();
   jar.set(COOKIE, token, {
@@ -51,7 +76,7 @@ export async function getSession(): Promise<SessionUser | null> {
   const token = jar.get(COOKIE)?.value;
   if (!token) return null;
   try {
-    const { payload } = await jwtVerify(token, secret());
+    const { payload } = await jwtVerify(token, authSecretBytes());
     return {
       id: String(payload.id),
       email: String(payload.email),
@@ -73,7 +98,17 @@ export async function requireSession(roles?: UserRole[]) {
 }
 
 export async function authenticate(email: string, password: string) {
-  const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+  const normalized = email.toLowerCase().trim();
+  const aliases =
+    normalized.endsWith("@denard.co.uk")
+      ? [normalized, normalized.replace(/@denard\.co\.uk$/, "@denard.com")]
+      : normalized.endsWith("@denard.com")
+        ? [normalized, normalized.replace(/@denard\.com$/, "@denard.co.uk")]
+        : [normalized];
+
+  const user = await prisma.user.findFirst({
+    where: { email: { in: aliases } },
+  });
   if (!user || !user.active) return null;
   const ok = await verifyPassword(password, user.passwordHash);
   if (!ok) return null;

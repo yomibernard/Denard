@@ -558,7 +558,20 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <InstagramStrip />
+      {sectionOn("instagram") ? (
+        <InstagramStrip
+          tiles={
+            newArrivals.items
+              .filter((p) => p.images[0]?.url)
+              .slice(0, 4)
+              .map((p) => ({
+                src: p.images[0]!.url,
+                alt: p.name,
+                href: `/product/${p.slug}`,
+              }))
+          }
+        />
+      ) : null}
 
       <RecentlyViewedRail />
 

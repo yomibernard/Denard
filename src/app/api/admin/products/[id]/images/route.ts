@@ -1,8 +1,7 @@
-import { randomUUID } from "node:crypto";
-import { mkdir, writeFile, unlink } from "node:fs/promises";
 import path from "node:path";
 import { prisma } from "@/lib/db";
 import { isSession, jsonError, jsonOk, requireAdmin } from "@/lib/admin-api";
+import { deleteStoredUpload, storeProductImage } from "@/lib/media";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -44,7 +43,6 @@ export async function POST(request: Request, ctx: Ctx) {
   const contentType = request.headers.get("content-type") ?? "";
 
   try {
-    // JSON body: add by URL
     if (contentType.includes("application/json")) {
       const body = await request.json();
       const url = String(body.url ?? "").trim();
@@ -66,16 +64,12 @@ export async function POST(request: Request, ctx: Ctx) {
       return jsonOk({ image }, { status: 201 });
     }
 
-    // Multipart upload
     const form = await request.formData();
     const files = form.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
     const single = form.get("file");
     if (single instanceof File && single.size > 0) files.push(single);
 
     if (!files.length) return jsonError("No image files provided");
-
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "products", productId);
-    await mkdir(uploadDir, { recursive: true });
 
     let count = await prisma.productImage.count({ where: { productId } });
     const created = [];
@@ -89,14 +83,17 @@ export async function POST(request: Request, ctx: Ctx) {
       }
 
       const buffer = Buffer.from(await file.arrayBuffer());
-      const filename = `${Date.now()}-${randomUUID().slice(0, 8)}${extFor(file.type, file.name)}`;
-      await writeFile(path.join(uploadDir, filename), buffer);
+      const stored = await storeProductImage({
+        productId,
+        buffer,
+        contentType: file.type || "image/jpeg",
+        extension: extFor(file.type, file.name),
+      });
 
-      const url = `/uploads/products/${productId}/${filename}`;
       const image = await prisma.productImage.create({
         data: {
           productId,
-          url,
+          url: stored.url,
           alt: product.name,
           sortOrder: count,
           isPrimary: count === 0,
@@ -124,7 +121,6 @@ export async function PATCH(request: Request, ctx: Ctx) {
   try {
     const body = await request.json();
 
-    // Reorder: { orderedIds: string[] }
     if (Array.isArray(body.orderedIds)) {
       const ids = body.orderedIds.map(String);
       await prisma.$transaction(
@@ -142,7 +138,6 @@ export async function PATCH(request: Request, ctx: Ctx) {
       return jsonOk({ images });
     }
 
-    // Set primary: { primaryId: string }
     if (body.primaryId) {
       const primaryId = String(body.primaryId);
       const target = await prisma.productImage.findFirst({
@@ -161,7 +156,6 @@ export async function PATCH(request: Request, ctx: Ctx) {
         }),
       ]);
 
-      // Keep primary first in sort order
       const rest = await prisma.productImage.findMany({
         where: { productId, id: { not: primaryId } },
         orderBy: { sortOrder: "asc" },
@@ -179,7 +173,6 @@ export async function PATCH(request: Request, ctx: Ctx) {
       return jsonOk({ images });
     }
 
-    // Update alt: { imageId, alt }
     if (body.imageId && body.alt !== undefined) {
       const image = await prisma.productImage.updateMany({
         where: { id: String(body.imageId), productId },
@@ -215,18 +208,8 @@ export async function DELETE(request: Request, ctx: Ctx) {
   if (!image) return jsonError("Image not found", 404);
 
   await prisma.productImage.delete({ where: { id: image.id } });
+  await deleteStoredUpload(image.url);
 
-  // Remove local upload file if under /uploads/
-  if (image.url.startsWith("/uploads/")) {
-    const filePath = path.join(process.cwd(), "public", image.url.replace(/^\//, ""));
-    try {
-      await unlink(filePath);
-    } catch {
-      // file may already be missing
-    }
-  }
-
-  // Ensure another primary if needed
   const remaining = await prisma.productImage.findMany({
     where: { productId },
     orderBy: { sortOrder: "asc" },

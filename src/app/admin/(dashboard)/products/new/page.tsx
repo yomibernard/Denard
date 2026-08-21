@@ -8,9 +8,11 @@ export const metadata = { title: "New product" };
 
 export default async function NewProductPage() {
   await requireAdminPage("products");
-  const [departments, brands] = await Promise.all([
+  const [departments, brands, categories, collections] = await Promise.all([
     prisma.department.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
     prisma.brand.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.category.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.collection.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
   ]);
 
   return (
@@ -21,16 +23,14 @@ export default async function NewProductPage() {
         </Link>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight">New product</h1>
         <p className="mt-1 text-sm text-muted">
-          Create the product first, then you will be taken to the edit page to upload images.
+          Create the product first, then upload images on the next screen.
         </p>
-      </div>
-      <div className="rounded border border-line bg-canvas/80 px-4 py-3 text-sm text-ink-soft">
-        After saving, use <strong className="font-medium text-ink">Product images</strong> to upload
-        photos, set the main image, reorder, or add an image URL.
       </div>
       <ProductForm
         departments={departments}
         brands={brands}
+        categories={categories}
+        collections={collections}
         initial={{
           name: "",
           slug: "",
@@ -39,6 +39,10 @@ export default async function NewProductPage() {
           compareAtPrice: "",
           shortDescription: "",
           description: "",
+          careInstructions: "",
+          sizeGuide: "",
+          metaTitle: "",
+          metaDescription: "",
           status: "DRAFT",
           availability: "IN_STOCK",
           stockQty: "",
@@ -48,6 +52,9 @@ export default async function NewProductPage() {
           isOnOffer: false,
           departmentId: "",
           brandId: "",
+          categoryIds: [],
+          collectionIds: [],
+          variantsText: "",
         }}
       />
     </div>

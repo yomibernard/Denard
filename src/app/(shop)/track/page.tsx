@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 
@@ -20,6 +20,16 @@ export default function TrackPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<TrackResult | null>(null);
+  const [paidBanner, setPaidBanner] = useState<"success" | "cancel" | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("reference");
+    if (ref) setReference(ref);
+    const paid = params.get("paid");
+    if (paid === "1") setPaidBanner("success");
+    if (paid === "0") setPaidBanner("cancel");
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,6 +61,17 @@ export default function TrackPage() {
       <p className="mt-2 text-ink-soft">
         Enter your enquiry reference and the phone number used when you submitted it.
       </p>
+      {paidBanner === "success" ? (
+        <p className="mt-4 rounded border border-accent/30 bg-mint-soft px-3 py-2 text-sm text-ink">
+          Payment received — thank you. Enter your details below to confirm enquiry status, or wait
+          for a WhatsApp confirmation from Denard.
+        </p>
+      ) : null}
+      {paidBanner === "cancel" ? (
+        <p className="mt-4 rounded border border-line bg-sand px-3 py-2 text-sm text-ink-soft">
+          Payment was cancelled. You can try again when Denard sends a new link on WhatsApp.
+        </p>
+      ) : null}
 
       <form onSubmit={onSubmit} className="mt-8 space-y-4">
         <div>

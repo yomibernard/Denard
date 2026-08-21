@@ -54,6 +54,13 @@ export async function ContentPage({
 
   const title = page?.title ?? fallbackTitle;
   const body = page?.body ?? fallbackBody ?? "";
+  const updatedAt = page?.updatedAt
+    ? page.updatedAt.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : "August 2026";
 
   return (
     <article className="container-denard py-8 md:py-12 max-w-3xl">
@@ -62,7 +69,7 @@ export async function ContentPage({
         className="mb-5"
       />
       <h1 className="font-display text-3xl md:text-4xl text-ink">{title}</h1>
-      <p className="mt-2 text-xs text-muted">Last updated: August 2026</p>
+      <p className="mt-2 text-xs text-muted">Last updated: {updatedAt}</p>
       <div className="mt-6 space-y-4 text-ink-soft whitespace-pre-wrap leading-relaxed">
         {body}
       </div>

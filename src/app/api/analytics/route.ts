@@ -17,6 +17,20 @@ const schema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const { clientIp, rateLimit, rateLimitHeaders } = await import("@/lib/rate-limit");
+    const limit = 120;
+    const rl = rateLimit({
+      key: `analytics:${clientIp(request)}`,
+      limit,
+      windowMs: 60_000,
+    });
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: "Rate limited" },
+        { status: 429, headers: rateLimitHeaders(rl, limit) },
+      );
+    }
+
     const body = await request.json();
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
@@ -39,7 +53,7 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true }, { headers: rateLimitHeaders(rl, limit) });
   } catch {
     return NextResponse.json({ error: "Failed to record event" }, { status: 500 });
   }

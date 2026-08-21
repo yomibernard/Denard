@@ -65,6 +65,20 @@ function resolveUrl(url?: string | null) {
 
 export async function POST(request: Request) {
   try {
+    const { clientIp, rateLimit, rateLimitHeaders } = await import("@/lib/rate-limit");
+    const limit = 12;
+    const rl = rateLimit({
+      key: `enquiry:${clientIp(request)}`,
+      limit,
+      windowMs: 60_000,
+    });
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: "Too many enquiries. Please wait a minute and try again." },
+        { status: 429, headers: rateLimitHeaders(rl, limit) },
+      );
+    }
+
     const json = await request.json();
     const parsed = schema.safeParse(json);
     if (!parsed.success) {
@@ -214,6 +228,23 @@ export async function POST(request: Request) {
         whatsappRedirectedAt: new Date(),
       },
     });
+
+    // Best-effort staff email alert (skipped when Resend is not configured)
+    try {
+      const { notifyNewEnquiry } = await import("@/lib/email");
+      await notifyNewEnquiry({
+        reference: enquiry.reference,
+        customerName: enquiry.customerName,
+        customerPhone: enquiry.customerPhone,
+        itemSummary: enquiry.items
+          .map((i) => `${i.quantity}× ${i.productName} (${i.productSku})`)
+          .join(", "),
+        adminUrl: absoluteUrl(`/admin/enquiries/${enquiry.id}`),
+        trackUrl: absoluteUrl(`/track?reference=${enquiry.reference}`),
+      });
+    } catch (emailErr) {
+      console.warn("enquiry email notify skipped", emailErr);
+    }
 
     return NextResponse.json({
       reference: enquiry.reference,

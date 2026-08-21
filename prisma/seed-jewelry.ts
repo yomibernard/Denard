@@ -3,16 +3,15 @@
  * Safe to re-run: upserts by SKU.
  */
 import "dotenv/config";
-import path from "node:path";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 
-const url = process.env.DATABASE_URL ?? "file:./dev.db";
-const dbPath = url.startsWith("file:")
-  ? path.resolve(process.cwd(), url.replace(/^file:/, ""))
-  : url;
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString || !/^postgres(ql)?:\/\//i.test(connectionString)) {
+  throw new Error("DATABASE_URL must be a PostgreSQL connection string");
+}
 const prisma = new PrismaClient({
-  adapter: new PrismaBetterSqlite3({ url: dbPath }),
+  adapter: new PrismaPg({ connectionString }),
 });
 
 type Item = {
@@ -353,6 +352,44 @@ async function main() {
   console.log(`\nImported ${ITEMS.length} jewellery products.`);
   console.log("Homepage: New Arrivals / Best Sellers / Featured will include this stock.");
   console.log("Shop: /category/jewellery  ·  Collection: /collection/jewellery-edit");
+
+  // Sample approved reviews for AggregateRating demos
+  const sampleProduct = await prisma.product.findFirst({
+    where: { sku: "DN-JWL-001" },
+    select: { id: true },
+  });
+  if (sampleProduct) {
+    const existing = await prisma.productReview.count({ where: { productId: sampleProduct.id } });
+    if (existing === 0) {
+      await prisma.productReview.createMany({
+        data: [
+          {
+            productId: sampleProduct.id,
+            authorName: "Amelia R.",
+            rating: 5,
+            title: "Beautiful everyday earrings",
+            body: "Light to wear and the crystal catches the light beautifully. WhatsApp ordering was easy.",
+            approved: true,
+          },
+          {
+            productId: sampleProduct.id,
+            authorName: "Chloe M.",
+            rating: 4,
+            title: "Gift-ready",
+            body: "Arrived carefully packaged. Confirmed size on WhatsApp before paying — felt personal.",
+            approved: true,
+          },
+        ],
+      });
+      console.log("Seeded sample reviews for DN-JWL-001");
+    }
+  }
+
+  await prisma.homepageSection.upsert({
+    where: { key: "instagram" },
+    create: { key: "instagram", title: "Instagram / UGC", sortOrder: 13, active: true },
+    update: { active: true },
+  });
 }
 
 main()

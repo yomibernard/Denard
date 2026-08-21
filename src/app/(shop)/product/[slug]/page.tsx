@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs, type Crumb } from "@/components/product/breadcrumbs";
 import { ProductDetailClient } from "@/components/product/product-detail-client";
+import { ProductReviews } from "@/components/product/product-reviews";
 import { ProductGrid } from "@/components/product/product-grid";
 import { RecentlyViewedRail } from "@/components/product/recently-viewed-rail";
 import { getProductBySlug } from "@/lib/catalogue";
@@ -75,6 +76,15 @@ export default async function ProductPage({ params }: Props) {
     i.url.startsWith("http") ? i.url : absoluteUrl(i.url),
   );
 
+  const reviewStats =
+    product.reviews.length > 0
+      ? {
+          count: product.reviews.length,
+          average:
+            product.reviews.reduce((sum, r) => sum + r.rating, 0) / product.reviews.length,
+        }
+      : null;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -95,6 +105,30 @@ export default async function ProductPage({ params }: Props) {
       url: absoluteUrl(`/product/${product.slug}`),
       seller: { "@type": "Organization", name: "Denard" },
     },
+    ...(reviewStats
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: Number(reviewStats.average.toFixed(1)),
+            reviewCount: reviewStats.count,
+            bestRating: 5,
+            worstRating: 1,
+          },
+          review: product.reviews.slice(0, 5).map((r) => ({
+            "@type": "Review",
+            author: { "@type": "Person", name: r.authorName },
+            datePublished: r.createdAt.toISOString().slice(0, 10),
+            reviewBody: r.body,
+            name: r.title || undefined,
+            reviewRating: {
+              "@type": "Rating",
+              ratingValue: r.rating,
+              bestRating: 5,
+              worstRating: 1,
+            },
+          })),
+        }
+      : {}),
   };
 
   return (
@@ -133,6 +167,20 @@ export default async function ProductPage({ params }: Props) {
           })),
         }}
         whatsappPhone={whatsappPhone}
+      />
+
+      <ProductReviews
+        productId={product.id}
+        average={reviewStats?.average ?? null}
+        count={reviewStats?.count ?? 0}
+        reviews={product.reviews.map((r) => ({
+          id: r.id,
+          authorName: r.authorName,
+          rating: r.rating,
+          title: r.title,
+          body: r.body,
+          createdAt: r.createdAt.toISOString(),
+        }))}
       />
 
       {related.length > 0 ? (

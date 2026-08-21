@@ -109,6 +109,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const [activeImage, setActiveImage] = useState(0);
   const [addedFlash, setAddedFlash] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
+  const [zoomScale, setZoomScale] = useState(1);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [shareFlash, setShareFlash] = useState(false);
   const [waMode, setWaMode] = useState<WaMode>(null);
@@ -129,6 +130,24 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
     pushRecent(product.id);
     trackEvent({ eventName: "product_view", productId: product.id });
   }, [product.id, pushRecent]);
+
+  useEffect(() => {
+    if (!zoomOpen && !sizeGuideOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setZoomOpen(false);
+        setSizeGuideOpen(false);
+        setZoomScale(1);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [zoomOpen, sizeGuideOpen]);
 
   const availableSizesForColour = useMemo(() => {
     if (!requiresColour) return sizes;
@@ -417,7 +436,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
       {zoomOpen ? (
         <div
-          className="fixed inset-0 z-[90] flex items-center justify-center bg-ink/80 p-4"
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-ink/85 p-4"
           role="dialog"
           aria-modal
           aria-label="Zoomed product image"
@@ -426,25 +445,86 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             type="button"
             className="absolute inset-0"
             aria-label="Close zoom"
-            onClick={() => setZoomOpen(false)}
+            onClick={() => {
+              setZoomOpen(false);
+              setZoomScale(1);
+            }}
           />
+          <div className="absolute right-4 top-4 z-20 flex items-center gap-2">
+            <button
+              type="button"
+              className="flex h-10 w-10 items-center justify-center bg-surface text-ink"
+              aria-label="Zoom out"
+              onClick={() => setZoomScale((s) => Math.max(1, Number((s - 0.25).toFixed(2))))}
+            >
+              <Minus className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              className="flex h-10 w-10 items-center justify-center bg-surface text-ink"
+              aria-label="Zoom in"
+              onClick={() => setZoomScale((s) => Math.min(3, Number((s + 0.25).toFixed(2))))}
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              className="flex h-10 w-10 items-center justify-center bg-surface text-ink"
+              aria-label="Close"
+              onClick={() => {
+                setZoomOpen(false);
+                setZoomScale(1);
+              }}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="relative z-10 h-[min(90vh,900px)] w-full max-w-3xl overflow-auto">
+            <div
+              className="relative mx-auto h-full w-full origin-center transition-transform duration-200"
+              style={{ transform: `scale(${zoomScale})` }}
+            >
+              <Image
+                src={images[activeImage]?.url ?? images[0].url}
+                alt={images[activeImage]?.alt || product.name}
+                fill
+                unoptimized={(images[activeImage]?.url ?? images[0].url).startsWith("http")}
+                className="object-contain"
+                sizes="100vw"
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {sizeGuideOpen && product.sizeGuide ? (
+        <div
+          className="fixed inset-0 z-[90] flex items-end justify-center bg-ink/50 p-4 sm:items-center"
+          role="dialog"
+          aria-modal
+          aria-label="Size guide"
+        >
           <button
             type="button"
-            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center bg-surface text-ink"
-            aria-label="Close"
-            onClick={() => setZoomOpen(false)}
-          >
-            <X className="h-5 w-5" />
-          </button>
-          <div className="relative z-10 h-[min(90vh,900px)] w-full max-w-3xl">
-            <Image
-              src={images[activeImage]?.url ?? images[0].url}
-              alt={images[activeImage]?.alt || product.name}
-              fill
-              unoptimized={(images[activeImage]?.url ?? images[0].url).startsWith("http")}
-              className="object-contain"
-              sizes="100vw"
-            />
+            className="absolute inset-0"
+            aria-label="Close size guide"
+            onClick={() => setSizeGuideOpen(false)}
+          />
+          <div className="relative z-10 max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-lg border border-line bg-surface p-5 shadow-lg">
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="font-display text-2xl text-ink">Size guide</h2>
+              <button
+                type="button"
+                className="flex h-9 w-9 items-center justify-center text-ink-soft"
+                aria-label="Close"
+                onClick={() => setSizeGuideOpen(false)}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-ink-soft">
+              {product.sizeGuide}
+            </div>
           </div>
         </div>
       ) : null}
@@ -683,17 +763,11 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             <button
               type="button"
               className="flex w-full items-center justify-between border-b border-line py-3 text-left"
-              aria-expanded={sizeGuideOpen}
-              onClick={() => setSizeGuideOpen((o) => !o)}
+              onClick={() => setSizeGuideOpen(true)}
             >
               <h2 className="font-display text-lg text-ink">Size guide</h2>
-              <span className="text-sm text-accent">{sizeGuideOpen ? "Hide" : "Show"}</span>
+              <span className="text-sm text-accent">Open</span>
             </button>
-            {sizeGuideOpen ? (
-              <div className="mt-3 overflow-x-auto border border-line bg-ivory p-4">
-                <p className="whitespace-pre-wrap text-sm text-ink-soft">{product.sizeGuide}</p>
-              </div>
-            ) : null}
           </div>
         ) : (
           <div className="mt-6">

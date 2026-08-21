@@ -1,19 +1,19 @@
-import path from "node:path";
 import { PrismaClient } from "@/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-function resolveDbPath() {
-  const url = process.env.DATABASE_URL ?? "file:./dev.db";
-  if (!url.startsWith("file:")) return url;
-  const relative = url.replace(/^file:/, "").replace(/^\.\//, "");
-  // Scope to project root file name only (avoids Turbopack tracing entire cwd)
-  return path.join(process.cwd(), /* turbopackIgnore: true */ relative);
-}
-
 function createClient() {
-  const adapter = new PrismaBetterSqlite3({ url: resolveDbPath() });
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error("DATABASE_URL is not set. Use a PostgreSQL connection string.");
+  }
+  if (!/^postgres(ql)?:\/\//i.test(connectionString)) {
+    throw new Error(
+      "DATABASE_URL must be a PostgreSQL URL (postgresql://…). SQLite is no longer supported for Denard production.",
+    );
+  }
+  const adapter = new PrismaPg({ connectionString });
   return new PrismaClient({ adapter });
 }
 

@@ -80,6 +80,7 @@ type WishlistState = {
   ids: string[];
   toggle: (productId: string) => void;
   has: (productId: string) => boolean;
+  mergeIds: (productIds: string[]) => void;
 };
 
 export const useWishlist = create<WishlistState>()(
@@ -93,6 +94,10 @@ export const useWishlist = create<WishlistState>()(
             : [...state.ids, productId],
         })),
       has: (productId) => get().ids.includes(productId),
+      mergeIds: (productIds) =>
+        set((state) => ({
+          ids: [...new Set([...productIds.filter(Boolean), ...state.ids])].slice(0, 60),
+        })),
     }),
     { name: "denard-wishlist" },
   ),

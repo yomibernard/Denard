@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 enum UserRole {
@@ -249,6 +249,22 @@ model Product {
   relatedFrom  ProductRelation[] @relation("ProductFrom")
   relatedTo    ProductRelation[] @relation("ProductTo")
   enquiryItems EnquiryItem[]
+  reviews      ProductReview[]
+}
+
+model ProductReview {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  authorName String
+  rating     Int
+  title      String?
+  body       String
+  approved   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([productId, approved])
+  @@index([createdAt])
 }
 
 model ProductImage {
@@ -377,6 +393,8 @@ model Enquiry {
   paymentStatus        PaymentStatus  @default(NONE)
   paymentMethod        String?
   paymentReference     String?
+  paymentLinkUrl       String?
+  stripeCheckoutSessionId String?
   amountPaid           Float?
   paymentDate          DateTime?
   source               String?

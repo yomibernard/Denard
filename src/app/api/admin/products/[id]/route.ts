@@ -1,9 +1,20 @@
 import { prisma } from "@/lib/db";
 import { isSession, jsonError, jsonOk, requireAdmin } from "@/lib/admin-api";
 import { slugify } from "@/lib/utils";
+import {
+  parseVariantsText,
+  syncProductCategories,
+  syncProductCollections,
+  syncProductVariants,
+} from "@/lib/product-admin";
 import type { AvailabilityStatus, ProductStatus } from "@/generated/prisma/client";
 
 type Ctx = { params: Promise<{ id: string }> };
+
+function asIdList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map(String).filter(Boolean);
+}
 
 export async function GET(_request: Request, ctx: Ctx) {
   const session = await requireAdmin("products");
@@ -18,6 +29,7 @@ export async function GET(_request: Request, ctx: Ctx) {
       images: { orderBy: { sortOrder: "asc" } },
       categories: { include: { category: true } },
       collections: { include: { collection: true } },
+      variants: { include: { colour: true, size: true } },
     },
   });
   if (!product) return jsonError("Not found", 404);
@@ -37,6 +49,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
     const name = body.name != null ? String(body.name).trim() : existing.name;
     const slug =
       body.slug != null ? String(body.slug).trim() || slugify(name) : existing.slug;
+    const price = body.price != null ? Number(body.price) : existing.price;
 
     const product = await prisma.product.update({
       where: { id },
@@ -63,6 +76,30 @@ export async function PATCH(request: Request, ctx: Ctx) {
               ? String(body.description)
               : null
             : undefined,
+        careInstructions:
+          body.careInstructions !== undefined
+            ? body.careInstructions
+              ? String(body.careInstructions)
+              : null
+            : undefined,
+        sizeGuide:
+          body.sizeGuide !== undefined
+            ? body.sizeGuide
+              ? String(body.sizeGuide)
+              : null
+            : undefined,
+        seoTitle:
+          body.metaTitle !== undefined
+            ? body.metaTitle
+              ? String(body.metaTitle)
+              : null
+            : undefined,
+        seoDescription:
+          body.metaDescription !== undefined
+            ? body.metaDescription
+              ? String(body.metaDescription)
+              : null
+            : undefined,
         status: body.status != null ? (body.status as ProductStatus) : undefined,
         availability:
           body.availability != null ? (body.availability as AvailabilityStatus) : undefined,
@@ -84,7 +121,26 @@ export async function PATCH(request: Request, ctx: Ctx) {
       },
     });
 
-    return jsonOk({ product });
+    if (body.categoryIds !== undefined) {
+      await syncProductCategories(id, asIdList(body.categoryIds));
+    }
+    if (body.collectionIds !== undefined) {
+      await syncProductCollections(id, asIdList(body.collectionIds));
+    }
+    if (typeof body.variantsText === "string") {
+      await syncProductVariants(id, parseVariantsText(body.variantsText), price);
+    }
+
+    const full = await prisma.product.findUnique({
+      where: { id: product.id },
+      include: {
+        categories: true,
+        collections: true,
+        variants: { include: { colour: true, size: true } },
+      },
+    });
+
+    return jsonOk({ product: full });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Update failed";
     if (message.includes("Unique constraint")) return jsonError("Slug or SKU already exists", 409);

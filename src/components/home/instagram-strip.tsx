@@ -3,43 +3,60 @@
 import Image from "next/image";
 import Link from "next/link";
 
-const FEED = [
-  {
-    src: "/images/social/feed-brand.svg",
-    alt: "Denard brand story",
-    href: "https://www.instagram.com/",
-  },
-  {
-    src: "/images/social/story-new-arrivals.svg",
-    alt: "New arrivals on Instagram",
-    href: "https://www.instagram.com/",
-  },
-  {
-    src: "/images/social/feed-best-sellers.svg",
-    alt: "Best sellers edit",
-    href: "https://www.instagram.com/",
-  },
-  {
-    src: "/images/social/story-sale.svg",
-    alt: "Offers and seasonal edits",
-    href: "https://www.instagram.com/",
-  },
-];
+export type UgcTile = {
+  src: string;
+  alt: string;
+  href?: string;
+};
 
-export function InstagramStrip() {
+export function InstagramStrip({
+  handle = "@denard",
+  profileUrl = "https://www.instagram.com/",
+  tiles,
+}: {
+  handle?: string;
+  profileUrl?: string;
+  tiles?: UgcTile[];
+}) {
+  const feed =
+    tiles && tiles.length
+      ? tiles
+      : [
+          {
+            src: "/images/social/feed-brand.svg",
+            alt: "Denard brand story",
+            href: profileUrl,
+          },
+          {
+            src: "/images/social/story-new-arrivals.svg",
+            alt: "New arrivals on Instagram",
+            href: profileUrl,
+          },
+          {
+            src: "/images/social/feed-best-sellers.svg",
+            alt: "Best sellers edit",
+            href: profileUrl,
+          },
+          {
+            src: "/images/social/story-sale.svg",
+            alt: "Offers and seasonal edits",
+            href: profileUrl,
+          },
+        ];
+
   return (
     <section className="border-t border-line bg-surface py-14 md:py-20">
       <div className="container-denard">
         <div className="mb-8 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-gold">@denard</p>
+            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-gold">{handle}</p>
             <h2 className="mt-2 font-display text-3xl text-ink md:text-4xl">On Instagram</h2>
             <p className="mt-2 max-w-md text-sm text-ink-soft">
               Style notes, new jewellery and behind-the-scenes from England.
             </p>
           </div>
           <a
-            href="https://www.instagram.com/"
+            href={profileUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm font-medium text-accent hover:underline"
@@ -48,12 +65,13 @@ export function InstagramStrip() {
           </a>
         </div>
         <ul className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
-          {FEED.map((item) => (
-            <li key={item.src}>
+          {feed.map((item) => (
+            <li key={item.src + item.alt}>
               <Link
-                href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
+                href={item.href || profileUrl}
+                {...((item.href || profileUrl).startsWith("http")
+                  ? { target: "_blank", rel: "noopener noreferrer" }
+                  : {})}
                 className="group relative block aspect-square overflow-hidden bg-sand"
               >
                 <Image
@@ -62,6 +80,7 @@ export function InstagramStrip() {
                   fill
                   className="object-cover transition duration-500 group-hover:scale-[1.03]"
                   sizes="(max-width:768px) 50vw, 25vw"
+                  unoptimized={item.src.startsWith("http")}
                 />
               </Link>
             </li>
