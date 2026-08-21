@@ -35,6 +35,14 @@ export function slugify(text: string) {
 export function absoluteUrl(path = "") {
   const fallback =
     process.env.NODE_ENV === "production" ? "https://denard.co.uk" : "http://localhost:3000";
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? fallback;
+  const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  let base = fallback;
+  if (raw) {
+    try {
+      base = new URL(raw).origin;
+    } catch {
+      base = fallback;
+    }
+  }
   return `${base.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
 }

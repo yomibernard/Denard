@@ -21,7 +21,17 @@ const display = Cormorant_Garamond({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://denard.co.uk";
+const siteUrl = (() => {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (raw) {
+    try {
+      return new URL(raw).origin;
+    } catch {
+      /* fall through */
+    }
+  }
+  return "https://denard.co.uk";
+})();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
