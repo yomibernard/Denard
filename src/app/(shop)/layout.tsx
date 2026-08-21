@@ -2,6 +2,9 @@ import { SiteShell } from "@/components/layout/site-shell";
 import { getNavigationTree, getSiteSetting } from "@/lib/catalogue";
 import { getWhatsAppPhone } from "@/lib/whatsapp-server";
 
+/** Avoid needing DATABASE_URL during `next build` page data collection on Vercel. */
+export const dynamic = "force-dynamic";
+
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
   const [departments, whatsappPhone, businessPhone, serviceHours, businessEmail, businessAddress] =
     await Promise.all([

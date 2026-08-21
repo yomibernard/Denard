@@ -31,63 +31,68 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/contact",
   ];
 
-  const [products, departments, categories, collections, pages] = await Promise.all([
-    prisma.product.findMany({
-      where: { status: "PUBLISHED" },
-      select: { slug: true, updatedAt: true },
-    }),
-    prisma.department.findMany({
-      where: { active: true },
-      select: { slug: true, updatedAt: true },
-    }),
-    prisma.category.findMany({
-      where: { active: true },
-      select: { slug: true, updatedAt: true },
-    }),
-    prisma.collection.findMany({
-      where: { active: true },
-      select: { slug: true, updatedAt: true },
-    }),
-    prisma.pageContent.findMany({ select: { slug: true, updatedAt: true } }),
-  ]);
+  const staticEntries: MetadataRoute.Sitemap = staticPaths.map((path) => ({
+    url: `${base}${path || "/"}`,
+    changeFrequency: "weekly" as const,
+    priority: path === "" ? 1 : 0.7,
+  }));
 
-  const entries: MetadataRoute.Sitemap = [
-    ...staticPaths.map((path) => ({
-      url: `${base}${path || "/"}`,
-      changeFrequency: "weekly" as const,
-      priority: path === "" ? 1 : 0.7,
-    })),
-    ...products.map((p) => ({
-      url: `${base}/product/${p.slug}`,
-      lastModified: p.updatedAt,
-      changeFrequency: "weekly" as const,
-      priority: 0.8,
-    })),
-    ...departments.map((d) => ({
-      url: `${base}/department/${d.slug}`,
-      lastModified: d.updatedAt,
-      changeFrequency: "weekly" as const,
-      priority: 0.6,
-    })),
-    ...categories.map((c) => ({
-      url: `${base}/category/${c.slug}`,
-      lastModified: c.updatedAt,
-      changeFrequency: "weekly" as const,
-      priority: 0.6,
-    })),
-    ...collections.map((c) => ({
-      url: `${base}/collection/${c.slug}`,
-      lastModified: c.updatedAt,
-      changeFrequency: "weekly" as const,
-      priority: 0.6,
-    })),
-    ...pages.map((p) => ({
-      url: `${base}/${p.slug}`,
-      lastModified: p.updatedAt,
-      changeFrequency: "monthly" as const,
-      priority: 0.4,
-    })),
-  ];
+  try {
+    const [products, departments, categories, collections, pages] = await Promise.all([
+      prisma.product.findMany({
+        where: { status: "PUBLISHED" },
+        select: { slug: true, updatedAt: true },
+      }),
+      prisma.department.findMany({
+        where: { active: true },
+        select: { slug: true, updatedAt: true },
+      }),
+      prisma.category.findMany({
+        where: { active: true },
+        select: { slug: true, updatedAt: true },
+      }),
+      prisma.collection.findMany({
+        where: { active: true },
+        select: { slug: true, updatedAt: true },
+      }),
+      prisma.pageContent.findMany({ select: { slug: true, updatedAt: true } }),
+    ]);
 
-  return entries;
+    return [
+      ...staticEntries,
+      ...products.map((p) => ({
+        url: `${base}/product/${p.slug}`,
+        lastModified: p.updatedAt,
+        changeFrequency: "weekly" as const,
+        priority: 0.8,
+      })),
+      ...departments.map((d) => ({
+        url: `${base}/department/${d.slug}`,
+        lastModified: d.updatedAt,
+        changeFrequency: "weekly" as const,
+        priority: 0.6,
+      })),
+      ...categories.map((c) => ({
+        url: `${base}/category/${c.slug}`,
+        lastModified: c.updatedAt,
+        changeFrequency: "weekly" as const,
+        priority: 0.6,
+      })),
+      ...collections.map((c) => ({
+        url: `${base}/collection/${c.slug}`,
+        lastModified: c.updatedAt,
+        changeFrequency: "weekly" as const,
+        priority: 0.6,
+      })),
+      ...pages.map((p) => ({
+        url: `${base}/${p.slug}`,
+        lastModified: p.updatedAt,
+        changeFrequency: "monthly" as const,
+        priority: 0.4,
+      })),
+    ];
+  } catch {
+    // Build/runtime without DB still ships a basic sitemap.
+    return staticEntries;
+  }
 }
