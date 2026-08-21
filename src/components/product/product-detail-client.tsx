@@ -359,7 +359,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const actionButtons = (
     <>
       <Button type="button" onClick={addToEnquiry} className="min-w-[10rem] min-h-12">
-        Add to Enquiry Bag
+        Add to enquiry list
       </Button>
       <Button
         type="button"
@@ -556,6 +556,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           ) : null}
           {pct ? <span className="text-sm font-semibold text-amber">-{pct}%</span> : null}
         </div>
+        <p className="mt-2 text-sm text-ink-soft">
+          Guide price — we confirm availability, delivery and final total on WhatsApp. No card
+          details are taken on this site.
+        </p>
 
         <p className="mt-1 text-xs text-muted">Reference: {sku}</p>
 
@@ -669,9 +673,9 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         {error ? <p className="mt-3 text-sm text-danger">{error}</p> : null}
         {addedFlash ? (
           <p className="mt-3 text-sm text-success">
-            Added to enquiry bag.{" "}
+            Added to enquiry list.{" "}
             <Link href="/enquiry" className="underline underline-offset-2">
-              View bag
+              View list
             </Link>
           </p>
         ) : null}
@@ -682,8 +686,11 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         ) : null}
 
         <div className="mt-6 hidden gap-3 sm:flex sm:flex-wrap">{actionButtons}</div>
+        <p className="mt-2 hidden text-xs text-muted sm:block">
+          Next: we confirm availability &amp; payment on WhatsApp — no card details on this site.
+        </p>
 
-        <div className="mt-3 hidden flex-wrap gap-3 sm:flex">
+        <div className="mt-3 flex flex-wrap gap-3">
           <Button
             type="button"
             variant="ghost"
@@ -702,6 +709,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           <Button
             type="button"
             variant="ghost"
+            className="hidden sm:inline-flex"
             onClick={() => toggleCompare(product.id)}
             aria-pressed={comparing}
           >
@@ -782,13 +790,16 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
 
       {/* Sticky mobile actions — leave room for FAB (bottom-20) */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm sm:hidden">
+        <p className="mb-2 text-center text-[10px] text-muted">
+          WhatsApp confirms availability &amp; payment
+        </p>
         <div className="flex gap-2">
           <button
             type="button"
             onClick={addToEnquiry}
             className={buttonClassName({ variant: "secondary", className: "min-h-12 flex-1 text-xs" })}
           >
-            Enquiry Bag
+            Enquiry
           </button>
           <button
             type="button"
@@ -803,6 +814,24 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             className={buttonClassName({ variant: "whatsapp", className: "min-h-12 flex-1 text-xs" })}
           >
             Buy
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              toggleWish(product.id);
+              trackEvent({
+                eventName: wished ? "wishlist_remove" : "wishlist_add",
+                productId: product.id,
+              });
+            }}
+            aria-label={wished ? "Remove from wishlist" : "Save to wishlist"}
+            aria-pressed={wished}
+            className={buttonClassName({
+              variant: "ghost",
+              className: "min-h-12 w-12 shrink-0 px-0",
+            })}
+          >
+            <Heart className={cn("h-4 w-4", wished && "fill-current text-accent")} />
           </button>
         </div>
       </div>

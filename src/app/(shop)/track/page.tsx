@@ -1,8 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonClassName } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
+import {
+  enquiryStatusCustomerNext,
+  enquiryStatusLabel,
+} from "@/lib/enquiry-status";
 
 type TrackResult = {
   reference: string;
@@ -56,8 +61,8 @@ export default function TrackPage() {
   }
 
   return (
-    <div className="container-denard py-8 md:py-12 max-w-lg">
-      <h1 className="font-display text-3xl md:text-4xl text-ink">Track enquiry</h1>
+    <div className="container-denard max-w-lg py-8 md:py-12">
+      <h1 className="font-display text-3xl text-ink md:text-4xl">Track enquiry</h1>
       <p className="mt-2 text-ink-soft">
         Enter your enquiry reference and the phone number used when you submitted it.
       </p>
@@ -96,7 +101,19 @@ export default function TrackPage() {
             autoComplete="tel"
           />
         </div>
-        {error ? <p className="text-sm text-danger">{error}</p> : null}
+        {error ? (
+          <div className="space-y-2">
+            <p className="text-sm text-danger">{error}</p>
+            <p className="text-xs text-muted">
+              Lost your reference? Message us on WhatsApp with your name and phone — we’ll look it
+              up. Or see{" "}
+              <Link href="/how-to-order" className="text-accent hover:underline">
+                how to order
+              </Link>
+              .
+            </p>
+          </div>
+        ) : null}
         <Button type="submit" disabled={loading}>
           {loading ? "Checking…" : "Check status"}
         </Button>
@@ -107,9 +124,8 @@ export default function TrackPage() {
           <p className="text-xs uppercase tracking-wider text-muted">Reference</p>
           <p className="font-medium text-ink">{result.reference}</p>
           <p className="mt-4 text-xs uppercase tracking-wider text-muted">Status</p>
-          <p className="font-display text-2xl text-accent">
-            {result.status.replaceAll("_", " ")}
-          </p>
+          <p className="font-display text-2xl text-accent">{enquiryStatusLabel(result.status)}</p>
+          <p className="mt-2 text-sm text-ink-soft">{enquiryStatusCustomerNext(result.status)}</p>
           <dl className="mt-4 space-y-2 text-sm text-ink-soft">
             <div className="flex justify-between gap-4">
               <dt>Submitted</dt>
@@ -124,6 +140,14 @@ export default function TrackPage() {
               <dd>{result.itemCount}</dd>
             </div>
           </dl>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Link href="/contact" className={buttonClassName({ variant: "whatsapp", size: "sm" })}>
+              Message on WhatsApp
+            </Link>
+            <Link href="/faq" className={buttonClassName({ variant: "outline", size: "sm" })}>
+              FAQ
+            </Link>
+          </div>
         </div>
       ) : null}
     </div>

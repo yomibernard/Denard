@@ -131,6 +131,34 @@ export function ProductForm({
         <p className="rounded border border-danger/30 bg-danger/5 px-3 py-2 text-sm text-danger">{error}</p>
       ) : null}
 
+      <div className="rounded-lg border border-line bg-mint-soft/40 p-4 text-sm">
+        <p className="font-semibold text-ink">Before publishing</p>
+        <ul className="mt-2 space-y-1 text-xs text-ink-soft">
+          <li className={values.name && values.sku && values.price !== "" ? "text-success" : ""}>
+            {values.name && values.sku && values.price !== "" ? "✓" : "○"} Name, SKU and price set
+          </li>
+          <li className={values.shortDescription.trim() ? "text-success" : ""}>
+            {values.shortDescription.trim() ? "✓" : "○"} Short description written
+          </li>
+          <li className={values.departmentId || values.categoryIds.length ? "text-success" : ""}>
+            {values.departmentId || values.categoryIds.length ? "✓" : "○"} Department or categories selected
+          </li>
+          <li className={values.availability !== "OUT_OF_STOCK" || values.status !== "PUBLISHED" ? "text-success" : "text-amber"}>
+            {values.status === "PUBLISHED" && values.availability === "OUT_OF_STOCK"
+              ? "! Published but marked out of stock — customers may still see it as unavailable"
+              : "✓ Availability matches stock"}
+          </li>
+          <li className="text-muted">
+            ○ Upload at least one real photo on the product Images tab after save
+          </li>
+        </ul>
+        {values.status === "PUBLISHED" && (!values.shortDescription.trim() || (!values.departmentId && !values.categoryIds.length)) ? (
+          <p className="mt-2 text-xs text-amber">
+            Publishing without description or taxonomy makes the product harder to find in the shop.
+          </p>
+        ) : null}
+      </div>
+
       <div className="grid gap-4 rounded-lg border border-line bg-white p-5 shadow-sm sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label className={label} htmlFor="name">Name</label>

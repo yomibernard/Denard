@@ -89,15 +89,25 @@ export default function WishlistPage() {
 
       {!ids.length ? (
         <div className="py-16 text-center">
-          <p className="text-sm text-muted">
-            Nothing saved yet.{" "}
-            <Link href="/shop" className="text-accent hover:underline">
+          <p className="text-sm font-medium text-ink">Nothing saved yet</p>
+          <p className="mt-2 text-sm text-muted">
+            Tap the heart on a product to build a wishlist you can share.
+          </p>
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
+            <Link href="/shop" className={buttonClassName({ variant: "primary", size: "sm" })}>
               Explore the shop
             </Link>
-          </p>
+            <Link href="/how-to-order" className={buttonClassName({ variant: "outline", size: "sm" })}>
+              How to order
+            </Link>
+          </div>
         </div>
       ) : loading ? (
-        <p className="py-16 text-center text-sm text-muted">Loading…</p>
+        <div className="mt-8 space-y-3" aria-busy aria-label="Loading wishlist">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-24 animate-pulse rounded bg-sand" />
+          ))}
+        </div>
       ) : (
         <>
           <div className="mt-4 flex flex-wrap gap-3">

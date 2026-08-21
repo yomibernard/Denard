@@ -4,6 +4,7 @@ import { MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonClassName } from "@/components/ui/button";
 import { buildWhatsAppUrl, generalAssistanceMessage } from "@/lib/whatsapp";
+import { MediaVideo } from "@/components/home/media-video";
 
 export type HeroProps = {
   title?: string;
@@ -56,12 +57,15 @@ export function Hero({
             <Link href={shopHref} className={buttonClassName({ variant: "primary", size: "lg" })}>
               Shop Products
             </Link>
+            <Link href="/how-to-order" className={buttonClassName({ variant: "outline", size: "lg" })}>
+              How to order
+            </Link>
             {waHref ? (
               <a
                 href={waHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={buttonClassName({ variant: "outline", size: "lg" })}
+                className={buttonClassName({ variant: "ghost", size: "lg" })}
               >
                 <MessageCircle className="h-4 w-4 text-mint-deep" strokeWidth={1.75} />
                 Chat on WhatsApp
@@ -78,17 +82,7 @@ export function Hero({
 
         <div className="relative aspect-[4/5] w-full overflow-hidden bg-sand sm:aspect-[5/6] md:aspect-auto md:min-h-[520px] lg:min-h-[560px]">
           {videoSrc ? (
-            <video
-              className="absolute inset-0 h-full w-full object-cover object-center"
-              autoPlay
-              muted
-              loop
-              playsInline
-              poster={imageSrc}
-              aria-label={imageAlt}
-            >
-              <source src={videoSrc} type="video/mp4" />
-            </video>
+            <MediaVideo src={videoSrc} poster={imageSrc} label={imageAlt} />
           ) : (
             <>
               <Image

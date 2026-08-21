@@ -90,15 +90,21 @@ export function ProductsTable({ products }: { products: ProductRow[] }) {
                 <td className="px-4 py-2.5 text-xs">
                   <span
                     className={
-                      p.availability === "OUT_OF_STOCK" || p.availability === "LOW_STOCK"
-                        ? "font-medium text-amber"
-                        : ""
+                      p.availability === "OUT_OF_STOCK"
+                        ? "font-semibold text-danger"
+                        : p.availability === "LOW_STOCK" ||
+                            (p.stockQty != null && p.stockQty > 0 && p.stockQty <= 5)
+                          ? "font-medium text-amber"
+                          : ""
                     }
                   >
                     {p.availability.replace(/_/g, " ")}
                   </span>
                   {p.stockQty != null ? (
-                    <span className="mt-0.5 block text-muted">Qty {p.stockQty}</span>
+                    <span className="mt-0.5 block text-muted">
+                      Qty {p.stockQty}
+                      {p.stockQty <= 5 && p.availability !== "OUT_OF_STOCK" ? " · restock soon" : ""}
+                    </span>
                   ) : null}
                 </td>
                 <td className="px-4 py-2.5 tabular-nums">

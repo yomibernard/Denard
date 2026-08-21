@@ -62,8 +62,8 @@ export function CookieConsent() {
         >
           <div className="container-denard flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <p className="max-w-2xl text-sm text-ink-soft">
-              We use cookies to understand how Denard is used and to improve our service. Analytics
-              load only after you accept. See our{" "}
+              We use optional analytics cookies to improve Denard. Essential shopping still works if
+              you reject. See our{" "}
               <a href="/privacy" className="text-accent underline underline-offset-2">
                 Privacy policy
               </a>

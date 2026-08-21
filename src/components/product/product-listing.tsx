@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import { Breadcrumbs, type Crumb } from "@/components/product/breadcrumbs";
 import { ListingToolbar, type ListingToolbarProps } from "@/components/product/listing-toolbar";
-import { ProductGrid } from "@/components/product/product-grid";
+import { ProductGrid, ProductGridEmptyWithClear } from "@/components/product/product-grid";
 import type { ProductCardData } from "@/components/product/product-card";
 import { buttonClassName } from "@/components/ui/button";
 import { getPlpFacets } from "@/lib/catalogue";
@@ -65,7 +65,10 @@ export async function ProductListing({
         />
       </Suspense>
 
-      <ProductGrid products={products} empty={empty} />
+      <ProductGrid
+        products={products}
+        empty={empty ?? <ProductGridEmptyWithClear clearHref={pathname} />}
+      />
 
       {totalPages > 1 ? (
         <nav

@@ -65,14 +65,22 @@ export default function ComparePage() {
       </div>
 
       {!ids.length ? (
-        <p className="py-16 text-center text-sm text-muted">
-          No products to compare.{" "}
-          <Link href="/shop" className="text-accent hover:underline">
-            Browse the shop
-          </Link>
-        </p>
+        <div className="py-16 text-center">
+          <p className="text-sm font-medium text-ink">No products to compare</p>
+          <p className="mt-2 text-sm text-muted">
+            Add up to a few pieces from the shop, then return here to compare side by side.
+          </p>
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
+            <Link href="/shop" className={buttonClassName({ variant: "primary", size: "sm" })}>
+              Browse the shop
+            </Link>
+            <Link href="/wishlist" className={buttonClassName({ variant: "outline", size: "sm" })}>
+              Open wishlist
+            </Link>
+          </div>
+        </div>
       ) : loading ? (
-        <p className="py-16 text-center text-sm text-muted">Loading…</p>
+        <div className="mt-8 h-48 animate-pulse rounded bg-sand" aria-busy aria-label="Loading compare" />
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] border-collapse text-sm">

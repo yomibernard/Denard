@@ -3,6 +3,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { Hero } from "@/components/home/hero";
 import { InstagramStrip } from "@/components/home/instagram-strip";
+import { MediaVideo } from "@/components/home/media-video";
 import { SectionHeader } from "@/components/home/section-header";
 import { ProductGrid } from "@/components/product/product-grid";
 import { RecentlyViewedRail } from "@/components/product/recently-viewed-rail";
@@ -199,17 +200,8 @@ export default async function HomePage() {
               href="/new-arrivals"
             />
             <div className="mt-8 relative aspect-[16/9] overflow-hidden bg-sand md:aspect-[21/9]">
-              <video
-                className="absolute inset-0 h-full w-full object-cover"
-                autoPlay
-                muted
-                loop
-                playsInline
-                aria-label="New arrival beads"
-              >
-                <source src="/videos/new-arrival-beads.mp4" type="video/mp4" />
-              </video>
-              <div className="absolute inset-0 bg-gradient-to-t from-ink/50 via-transparent to-transparent" />
+              <MediaVideo src="/videos/new-arrival-beads.mp4" label="New arrival beads" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/50 via-transparent to-transparent" />
               <div className="absolute bottom-0 left-0 p-5 md:p-8">
                 <p className="text-[11px] uppercase tracking-[0.16em] text-gold">Just in</p>
                 <h3 className="mt-1 font-display text-2xl text-white md:text-3xl">Beaded new arrivals</h3>
@@ -449,8 +441,8 @@ export default async function HomePage() {
         <section className="border-t border-line bg-surface py-16 md:py-24">
           <div className="container-denard">
             <SectionHeader
-              title="Customer stories"
-              subtitle="Service experiences with Denard. Verified product reviews arrive in a later phase."
+              title="How customers describe shopping with us"
+              subtitle="Illustrative service stories — not verified product reviews. Real product ratings appear on product pages when moderated."
             />
             <div className="mt-10 grid gap-5 md:grid-cols-3">
               {[
@@ -474,7 +466,10 @@ export default async function HomePage() {
                 },
               ].map((t) => (
                 <blockquote key={t.name} className="border border-line border-l-gold bg-ivory p-6 border-l-2">
-                  <p className="text-sm leading-relaxed text-ink-soft">“{t.quote}”</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+                    Illustrative
+                  </p>
+                  <p className="mt-2 text-sm leading-relaxed text-ink-soft">“{t.quote}”</p>
                   <footer className="mt-5 text-xs font-medium uppercase tracking-[0.08em] text-ink">
                     {t.name} · {t.place}
                   </footer>

@@ -3,17 +3,7 @@
  * Run: npx tsx scripts/remove-electronics.ts
  */
 import "dotenv/config";
-import path from "node:path";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import { PrismaClient } from "../src/generated/prisma/client";
-
-const url = process.env.DATABASE_URL ?? "file:./dev.db";
-const dbPath = url.startsWith("file:")
-  ? path.resolve(process.cwd(), url.replace(/^file:/, ""))
-  : url;
-const prisma = new PrismaClient({
-  adapter: new PrismaBetterSqlite3({ url: dbPath }),
-});
+import { prisma } from "../src/lib/db";
 
 async function deleteProducts(productIds: string[]) {
   if (!productIds.length) return;

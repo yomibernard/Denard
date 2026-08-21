@@ -1,24 +1,28 @@
 import Link from "next/link";
+import { MessageCircle } from "lucide-react";
 import { prisma } from "@/lib/db";
 import type { EnquiryStatus } from "@/generated/prisma/client";
 import { formatPrice } from "@/lib/utils";
 import { format } from "date-fns";
 import { requireAdminPage } from "@/lib/admin-page";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import {
+  ENQUIRY_STATUSES,
+  enquiryStatusAdminHint,
+  enquiryStatusLabel,
+} from "@/lib/enquiry-status";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Enquiries" };
 
-const STATUSES: EnquiryStatus[] = [
-  "NEW",
-  "WHATSAPP_OPENED",
-  "CUSTOMER_CONTACTED",
-  "AVAILABILITY_CONFIRMED",
-  "AWAITING_PAYMENT",
-  "PAYMENT_CONFIRMED",
-  "PROCESSING",
-  "DISPATCHED",
-  "COMPLETED",
-  "CANCELLED",
+const QUICK_FILTERS: Array<{ status: EnquiryStatus | ""; label: string }> = [
+  { status: "", label: "All" },
+  { status: "NEW", label: "New" },
+  { status: "WHATSAPP_OPENED", label: "WA opened" },
+  { status: "CUSTOMER_CONTACTED", label: "In touch" },
+  { status: "AWAITING_PAYMENT", label: "Awaiting pay" },
+  { status: "PAYMENT_CONFIRMED", label: "Paid" },
+  { status: "PROCESSING", label: "Processing" },
 ];
 
 export default async function AdminEnquiriesPage({
@@ -31,7 +35,7 @@ export default async function AdminEnquiriesPage({
   const status = sp.status ?? "";
   const q = (sp.q ?? "").trim();
 
-  const [enquiries, topProducts] = await Promise.all([
+  const [enquiries, topProducts, newCount] = await Promise.all([
     prisma.enquiry.findMany({
       where: {
         AND: [
@@ -39,8 +43,8 @@ export default async function AdminEnquiriesPage({
           q
             ? {
                 OR: [
-                  { reference: { contains: q } },
-                  { customerName: { contains: q } },
+                  { reference: { contains: q, mode: "insensitive" } },
+                  { customerName: { contains: q, mode: "insensitive" } },
                   { customerPhone: { contains: q } },
                 ],
               }
@@ -60,6 +64,7 @@ export default async function AdminEnquiriesPage({
       take: 8,
       select: { id: true, name: true, sku: true, enquiryCount: true },
     }),
+    prisma.enquiry.count({ where: { status: "NEW" } }),
   ]);
 
   return (
@@ -67,7 +72,10 @@ export default async function AdminEnquiriesPage({
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Enquiries</h1>
-          <p className="mt-1 text-sm text-muted">{enquiries.length} shown</p>
+          <p className="mt-1 text-sm text-muted">
+            {enquiries.length} shown
+            {newCount > 0 ? ` · ${newCount} new` : ""}
+          </p>
         </div>
         <a
           href="/api/admin/enquiries/export"
@@ -77,7 +85,30 @@ export default async function AdminEnquiriesPage({
         </a>
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        {QUICK_FILTERS.map((f) => {
+          const active = status === f.status;
+          const href = f.status
+            ? `/admin/enquiries?status=${f.status}${q ? `&q=${encodeURIComponent(q)}` : ""}`
+            : `/admin/enquiries${q ? `?q=${encodeURIComponent(q)}` : ""}`;
+          return (
+            <Link
+              key={f.label}
+              href={href}
+              className={`inline-flex h-8 items-center rounded-full px-3 text-xs font-medium ${
+                active
+                  ? "bg-accent text-white"
+                  : "border border-line bg-white text-ink-soft hover:bg-sand"
+              }`}
+            >
+              {f.label}
+            </Link>
+          );
+        })}
+      </div>
+
       <form method="get" className="flex flex-wrap gap-2">
+        {status ? <input type="hidden" name="status" value={status} /> : null}
         <input
           name="q"
           defaultValue={q}
@@ -90,9 +121,9 @@ export default async function AdminEnquiriesPage({
           className="h-9 rounded border border-line bg-white px-3 text-sm"
         >
           <option value="">All statuses</option>
-          {STATUSES.map((s) => (
+          {ENQUIRY_STATUSES.map((s) => (
             <option key={s} value={s}>
-              {s.replace(/_/g, " ")}
+              {enquiryStatusLabel(s)}
             </option>
           ))}
         </select>
@@ -112,10 +143,10 @@ export default async function AdminEnquiriesPage({
               <th className="px-4 py-2.5 font-medium">Customer</th>
               <th className="px-4 py-2.5 font-medium">Items</th>
               <th className="px-4 py-2.5 font-medium">Status</th>
+              <th className="px-4 py-2.5 font-medium">Next step</th>
               <th className="px-4 py-2.5 font-medium">Payment</th>
-              <th className="px-4 py-2.5 font-medium">Assigned</th>
               <th className="px-4 py-2.5 font-medium">Total</th>
-              <th className="px-4 py-2.5 font-medium">Created</th>
+              <th className="px-4 py-2.5 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -126,33 +157,69 @@ export default async function AdminEnquiriesPage({
                 </td>
               </tr>
             ) : (
-              enquiries.map((e) => (
-                <tr key={e.id} className="border-t border-line">
-                  <td className="px-4 py-2.5">
-                    <Link href={`/admin/enquiries/${e.id}`} className="font-medium hover:text-accent">
-                      {e.reference}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-2.5">
-                    <p>{e.customerName}</p>
-                    <p className="text-xs text-muted">{e.customerPhone}</p>
-                  </td>
-                  <td className="px-4 py-2.5 tabular-nums">{e.items.length}</td>
-                  <td className="px-4 py-2.5">
-                    <span className="rounded bg-accent-soft px-1.5 py-0.5 text-[11px] font-medium text-accent">
-                      {e.status.replace(/_/g, " ")}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2.5 text-xs">{e.paymentStatus.replace(/_/g, " ")}</td>
-                  <td className="px-4 py-2.5 text-xs">{e.assignedTo?.name ?? "—"}</td>
-                  <td className="px-4 py-2.5 tabular-nums">
-                    {formatPrice(e.estimatedTotal, e.currency)}
-                  </td>
-                  <td className="px-4 py-2.5 text-xs text-muted">
-                    {format(e.createdAt, "dd MMM yyyy HH:mm")}
-                  </td>
-                </tr>
-              ))
+              enquiries.map((e) => {
+                const digits = e.customerPhone.replace(/\D/g, "");
+                const waHref = digits
+                  ? buildWhatsAppUrl(
+                      digits,
+                      `Hello ${e.customerName}, this is Denard regarding enquiry ${e.reference}.`,
+                    )
+                  : null;
+                return (
+                  <tr key={e.id} className="border-t border-line">
+                    <td className="px-4 py-2.5">
+                      <Link
+                        href={`/admin/enquiries/${e.id}`}
+                        className="font-medium hover:text-accent"
+                      >
+                        {e.reference}
+                      </Link>
+                      <p className="text-[11px] text-muted">
+                        {format(e.createdAt, "dd MMM HH:mm")}
+                        {e.assignedTo?.name ? ` · ${e.assignedTo.name}` : ""}
+                      </p>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <p>{e.customerName}</p>
+                      <p className="text-xs text-muted">{e.customerPhone}</p>
+                    </td>
+                    <td className="px-4 py-2.5 tabular-nums">{e.items.length}</td>
+                    <td className="px-4 py-2.5">
+                      <span className="rounded bg-accent-soft px-1.5 py-0.5 text-[11px] font-medium text-accent">
+                        {enquiryStatusLabel(e.status)}
+                      </span>
+                    </td>
+                    <td className="max-w-[12rem] px-4 py-2.5 text-xs text-muted">
+                      {enquiryStatusAdminHint(e.status)}
+                    </td>
+                    <td className="px-4 py-2.5 text-xs">{e.paymentStatus.replace(/_/g, " ")}</td>
+                    <td className="px-4 py-2.5 tabular-nums">
+                      {formatPrice(e.estimatedTotal, e.currency)}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link
+                          href={`/admin/enquiries/${e.id}`}
+                          className="text-xs font-medium text-accent hover:underline"
+                        >
+                          Open
+                        </Link>
+                        {waHref ? (
+                          <a
+                            href={waHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs font-medium text-[#1f6b45] hover:underline"
+                          >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                            WA
+                          </a>
+                        ) : null}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

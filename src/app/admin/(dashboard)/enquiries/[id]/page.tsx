@@ -9,6 +9,7 @@ import { stripeConfigured } from "@/lib/stripe";
 import { EnquiryUpdateForm } from "@/components/admin/enquiry-update-form";
 import { EnquiryPaymentLinkPanel } from "@/components/admin/enquiry-payment-link";
 import { requireAdminPage } from "@/lib/admin-page";
+import { enquiryStatusLabel } from "@/lib/enquiry-status";
 
 export const dynamic = "force-dynamic";
 
@@ -62,7 +63,7 @@ export default async function AdminEnquiryDetailPage({ params }: Props) {
           <h1 className="mt-2 text-2xl font-semibold tracking-tight">{enquiry.reference}</h1>
           <p className="text-sm text-muted">
             {format(enquiry.createdAt, "dd MMM yyyy HH:mm")} ·{" "}
-            {enquiry.status.replace(/_/g, " ")}
+            {enquiryStatusLabel(enquiry.status)}
             {enquiry.whatsappRedirected ? " · WhatsApp opened" : ""}
           </p>
         </div>

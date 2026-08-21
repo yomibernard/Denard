@@ -39,11 +39,13 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<SearchResponse>({ products: [], categories: [] });
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   const close = useCallback(() => {
     onOpenChange(false);
     setQuery("");
     setResults({ products: [], categories: [] });
+    setSearchError(null);
   }, [onOpenChange]);
 
   useEffect(() => {
@@ -83,12 +85,14 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     const q = query.trim();
     if (q.length < 2) {
       setResults({ products: [], categories: [] });
+      setSearchError(null);
       setLoading(false);
       return;
     }
 
     const controller = new AbortController();
     setLoading(true);
+    setSearchError(null);
     const timer = window.setTimeout(async () => {
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, {
@@ -105,6 +109,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
       } catch (err) {
         if ((err as Error).name !== "AbortError") {
           setResults({ products: [], categories: [] });
+          setSearchError("Search couldn’t load. Check your connection and try again.");
         }
       } finally {
         setLoading(false);
@@ -162,15 +167,58 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
 
         <div className="max-h-[min(60vh,420px)] overflow-y-auto">
           {!hasQuery ? (
-            <p className="px-4 py-8 text-center text-sm text-muted">
-              Type at least 2 characters to search.
-            </p>
+            <div className="px-4 py-6">
+              <p className="text-center text-sm text-muted">Type at least 2 characters to search.</p>
+              <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted">
+                Popular
+              </p>
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {[
+                  { href: "/shop?isNew=1", label: "New arrivals" },
+                  { href: "/shop?isBestSeller=1", label: "Best sellers" },
+                  { href: "/shop?isOnOffer=1", label: "Offers" },
+                  { href: "/category/jewellery", label: "Jewellery" },
+                  { href: "/how-to-order", label: "How to order" },
+                ].map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={close}
+                      className="inline-flex border border-line px-2.5 py-1 text-xs text-ink-soft transition-colors hover:border-accent hover:text-accent"
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ) : null}
 
-          {empty ? (
-            <p className="px-4 py-8 text-center text-sm text-muted">
-              No matches for “{query.trim()}”.
-            </p>
+          {searchError ? (
+            <p className="px-4 py-8 text-center text-sm text-danger">{searchError}</p>
+          ) : null}
+
+          {empty && !searchError ? (
+            <div className="px-4 py-8 text-center">
+              <p className="text-sm text-muted">No matches for “{query.trim()}”.</p>
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                <Link
+                  href="/shop"
+                  onClick={close}
+                  className="text-sm font-medium text-accent hover:underline"
+                >
+                  Browse shop
+                </Link>
+                <span className="text-muted">·</span>
+                <Link
+                  href="/contact"
+                  onClick={close}
+                  className="text-sm font-medium text-accent hover:underline"
+                >
+                  Ask on WhatsApp
+                </Link>
+              </div>
+            </div>
           ) : null}
 
           {categories.length > 0 ? (

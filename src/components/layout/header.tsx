@@ -1,8 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { Heart, Menu, MessageCircle, Search, ShoppingBag, X, ChevronDown, Columns2 } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
+import {
+  ClipboardList,
+  Heart,
+  Menu,
+  MessageCircle,
+  Search,
+  X,
+  ChevronDown,
+  Columns2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buildWhatsAppUrl, generalAssistanceMessage } from "@/lib/whatsapp";
 import { useCompare, useEnquiryBasket, useWishlist } from "@/store/commerce";
@@ -35,6 +44,15 @@ const NAV_LINKS = [
   { href: "/shop?isNew=1", label: "New" },
   { href: "/shop?isBestSeller=1", label: "Best Sellers" },
   { href: "/shop?isOnOffer=1", label: "Offers" },
+  { href: "/how-to-order", label: "How to order" },
+  { href: "/track", label: "Track" },
+] as const;
+
+const HELP_LINKS = [
+  { href: "/how-to-order", label: "How to order" },
+  { href: "/track", label: "Track enquiry" },
+  { href: "/wishlist", label: "Wishlist" },
+  { href: "/faq", label: "FAQ" },
 ] as const;
 
 export function Header({ departments = [], whatsappPhone = "", className }: HeaderProps) {
@@ -43,12 +61,34 @@ export function Header({ departments = [], whatsappPhone = "", className }: Head
   const [searchOpen, setSearchOpen] = useState(false);
   const [deptOpen, setDeptOpen] = useState(false);
   const [mobileDept, setMobileDept] = useState<string | null>(null);
+  const deptWrapRef = useRef<HTMLDivElement>(null);
+  const mobileCloseRef = useRef<HTMLButtonElement>(null);
+  const deptMenuId = useId();
 
   const basketCount = useEnquiryBasket((s) =>
     s.items.reduce((sum, i) => sum + i.quantity, 0),
   );
   const wishlistCount = useWishlist((s) => s.ids.length);
   const compareCount = useCompare((s) => s.ids.length);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.key === "k" || e.key === "K") && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+      if (e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const tag = (e.target as HTMLElement)?.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable) {
+          return;
+        }
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -63,6 +103,20 @@ export function Header({ departments = [], whatsappPhone = "", className }: Head
       document.body.style.overflow = "";
     };
   }, [mobileOpen]);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    mobileCloseRef.current?.focus();
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    if (!deptOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setDeptOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [deptOpen]);
 
   const waHref = whatsappPhone
     ? buildWhatsAppUrl(whatsappPhone, generalAssistanceMessage())
@@ -104,17 +158,29 @@ export function Header({ departments = [], whatsappPhone = "", className }: Head
 
             {departments.length > 0 ? (
               <div
+                ref={deptWrapRef}
                 className="relative"
                 onMouseEnter={() => setDeptOpen(true)}
                 onMouseLeave={() => setDeptOpen(false)}
+                onBlur={(e) => {
+                  if (!deptWrapRef.current?.contains(e.relatedTarget as Node)) {
+                    setDeptOpen(false);
+                  }
+                }}
               >
                 <button
                   type="button"
                   className="nav-link-premium inline-flex items-center gap-1 px-3 py-2 text-sm text-ink-soft transition-colors hover:text-ink"
                   aria-expanded={deptOpen}
-                  aria-controls="departments-menu"
+                  aria-controls={deptMenuId}
                   id="departments-trigger"
                   onClick={() => setDeptOpen((v) => !v)}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowDown") {
+                      e.preventDefault();
+                      setDeptOpen(true);
+                    }
+                  }}
                 >
                   Departments
                   <ChevronDown
@@ -124,7 +190,7 @@ export function Header({ departments = [], whatsappPhone = "", className }: Head
                 </button>
 
                 <div
-                  id="departments-menu"
+                  id={deptMenuId}
                   role="menu"
                   aria-labelledby="departments-trigger"
                   className={cn(
@@ -140,6 +206,7 @@ export function Header({ departments = [], whatsappPhone = "", className }: Head
                         <div key={dept.id}>
                           <Link
                             href={`/department/${dept.slug}`}
+                            role="menuitem"
                             className="font-display text-lg text-ink hover:text-mint-deep"
                             onClick={() => setDeptOpen(false)}
                           >
@@ -151,6 +218,7 @@ export function Header({ departments = [], whatsappPhone = "", className }: Head
                                 <li key={cat.id}>
                                   <Link
                                     href={`/category/${cat.slug}`}
+                                    role="menuitem"
                                     className="text-sm text-ink-soft transition-colors hover:text-accent"
                                     onClick={() => setDeptOpen(false)}
                                   >
@@ -222,9 +290,10 @@ export function Header({ departments = [], whatsappPhone = "", className }: Head
             <Link
               href="/enquiry"
               className="focus-ring relative flex h-10 w-10 items-center justify-center text-ink-soft transition-colors hover:text-accent"
-              aria-label={`Enquiry bag, ${basketCount} items`}
+              aria-label={`Enquiry list, ${basketCount} items`}
+              title="Enquiry list"
             >
-              <ShoppingBag className="h-5 w-5" strokeWidth={1.75} />
+              <ClipboardList className="h-5 w-5" strokeWidth={1.75} />
               {basketCount > 0 ? (
                 <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-white">
                   {basketCount > 99 ? "99+" : basketCount}
@@ -235,7 +304,6 @@ export function Header({ departments = [], whatsappPhone = "", className }: Head
         </div>
       </header>
 
-      {/* Mobile drawer */}
       <div
         className={cn(
           "fixed inset-0 z-[60] lg:hidden",
@@ -261,6 +329,7 @@ export function Header({ departments = [], whatsappPhone = "", className }: Head
           <div className="flex h-[var(--header-h)] items-center justify-between border-b border-line px-4">
             <DenardLogo variant="wordmark" href={null} className="!h-10 sm:!h-11" />
             <button
+              ref={mobileCloseRef}
               type="button"
               className="focus-ring flex h-10 w-10 items-center justify-center text-ink"
               aria-label="Close menu"
@@ -284,6 +353,25 @@ export function Header({ departments = [], whatsappPhone = "", className }: Head
                 </li>
               ))}
             </ul>
+
+            <div className="mt-6 border-t border-line pt-5">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
+                Help
+              </p>
+              <ul className="space-y-1">
+                {HELP_LINKS.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="block py-2 text-sm text-ink-soft"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
             {departments.length > 0 ? (
               <div className="mt-6 border-t border-line pt-5">

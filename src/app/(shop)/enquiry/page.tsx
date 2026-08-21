@@ -39,7 +39,7 @@ export default function EnquiryPage() {
     e.preventDefault();
     if (submitLock.current) return;
     if (!items.length) {
-      setError("Your enquiry bag is empty.");
+      setError("Your enquiry list is empty.");
       return;
     }
     submitLock.current = true;
@@ -110,6 +110,30 @@ export default function EnquiryPage() {
       <div className="container-denard mx-auto max-w-lg py-16 text-center">
         <h1 className="font-display text-3xl text-ink">Enquiry prepared</h1>
         <p className="mt-3 text-ink-soft">{confirmation}</p>
+        <div className="mt-6 rounded-[var(--denard-radius)] border border-line bg-surface px-4 py-3">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
+            Your reference
+          </p>
+          <p className="mt-1 font-mono text-lg font-semibold text-ink">{reference}</p>
+          <button
+            type="button"
+            className="mt-2 text-xs font-medium text-accent hover:underline"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(reference);
+              } catch {
+                /* ignore */
+              }
+            }}
+          >
+            Copy reference
+          </button>
+        </div>
+        <ol className="mt-6 space-y-2 text-left text-sm text-ink-soft">
+          <li>1. Send the WhatsApp message to Denard (if it didn’t open, use the button below).</li>
+          <li>2. Keep your reference handy — you’ll need it to track progress.</li>
+          <li>3. We’ll confirm availability, delivery and payment on WhatsApp.</li>
+        </ol>
         {whatsappUrl ? (
           <a
             href={whatsappUrl}
@@ -121,7 +145,10 @@ export default function EnquiryPage() {
           </a>
         ) : null}
         <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <Link href="/track" className={buttonClassName()}>
+          <Link
+            href={`/track?reference=${encodeURIComponent(reference)}`}
+            className={buttonClassName()}
+          >
             Track enquiry
           </Link>
           <Link
@@ -132,21 +159,23 @@ export default function EnquiryPage() {
             Continue shopping
           </Link>
         </div>
-        {items.length ? (
-          <p className="mt-4 text-xs text-muted">
-            Your enquiry bag is still saved until you continue shopping.
-          </p>
-        ) : null}
+        <button
+          type="button"
+          className="mt-4 text-xs text-muted hover:text-accent hover:underline"
+          onClick={() => clear()}
+        >
+          Clear enquiry list now
+        </button>
       </div>
     );
   }
 
   return (
     <div className="container-denard py-8 md:py-12">
-      <h1 className="font-display text-3xl text-ink md:text-4xl">Enquiry bag</h1>
+      <h1 className="font-display text-3xl text-ink md:text-4xl">Enquiry list</h1>
       <p className="mt-2 max-w-xl text-ink-soft">
-        Review your selections, then send them to Denard on WhatsApp. Payment is arranged in chat —
-        we never collect card details here.
+        This is not a checkout cart. Review your selections, then send them to Denard on WhatsApp.
+        Availability, delivery and payment are confirmed in chat — we never collect card details here.
       </p>
 
       {!items.length ? (
@@ -159,10 +188,15 @@ export default function EnquiryPage() {
               className="object-contain"
             />
           </div>
-          <p className="text-sm text-muted">Your enquiry bag is empty.</p>
-          <Link href="/shop" className={buttonClassName({ variant: "primary", className: "mt-5" })}>
-            Continue shopping
-          </Link>
+          <p className="text-sm text-muted">Your enquiry list is empty.</p>
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
+            <Link href="/shop" className={buttonClassName({ variant: "primary" })}>
+              Continue shopping
+            </Link>
+            <Link href="/how-to-order" className={buttonClassName({ variant: "outline" })}>
+              How to order
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="mt-8 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">

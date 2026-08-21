@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Columns2, Heart, ShoppingBag } from "lucide-react";
+import { Columns2, ClipboardList, Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonClassName } from "@/components/ui/button";
 import { cn, discountPercent, formatPrice } from "@/lib/utils";
@@ -97,6 +97,7 @@ export function ProductCard({ product, className, priority }: ProductCardProps) 
   const comparing = useCompare((s) => s.ids.includes(product.id));
   const addItem = useEnquiryBasket((s) => s.addItem);
   const [added, setAdded] = useState(false);
+  const [needOptions, setNeedOptions] = useState(false);
   const images = product.images ?? [];
   const primary = images[0];
   const secondary = images[1];
@@ -107,13 +108,17 @@ export function ProductCard({ product, className, priority }: ProductCardProps) 
   const outOfStock = product.availability === "OUT_OF_STOCK";
   const badges = pickBadges(product, pct);
 
-  function addToCart() {
+  function addToEnquiry() {
     if (outOfStock) return;
     const needsOptions = (product.variants ?? []).some(
       (v) => v.colour || v.size || (v.name && v.name.trim()),
     );
     if (needsOptions) {
-      window.location.href = href;
+      setNeedOptions(true);
+      window.setTimeout(() => setNeedOptions(false), 2500);
+      window.setTimeout(() => {
+        window.location.href = href;
+      }, 600);
       return;
     }
     addItem({
@@ -129,7 +134,7 @@ export function ProductCard({ product, className, priority }: ProductCardProps) 
     });
     trackEvent({ eventName: "add_to_enquiry", productId: product.id });
     setAdded(true);
-    window.setTimeout(() => setAdded(false), 2000);
+    window.setTimeout(() => setAdded(false), 2800);
   }
 
   return (
@@ -262,6 +267,8 @@ export function ProductCard({ product, className, priority }: ProductCardProps) 
               {colours.slice(0, 5).map((c) => (
                 <li key={c.id}>
                   <span
+                    role="img"
+                    aria-label={c.name}
                     title={c.name}
                     className="block h-3 w-3 rounded-full border border-ink/15"
                     style={{ backgroundColor: c.hex }}
@@ -273,30 +280,43 @@ export function ProductCard({ product, className, priority }: ProductCardProps) 
             <div className="min-h-[14px]" aria-hidden />
           )}
 
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={outOfStock}
-              onClick={addToCart}
-              className={buttonClassName({
-                variant: "primary",
-                size: "sm",
-                className: "min-w-0 flex-1 px-2",
-              })}
-            >
-              <ShoppingBag className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />
-              <span className="truncate">{added ? "Added" : "Add"}</span>
-            </button>
-            <Link
-              href={href}
-              className={buttonClassName({
-                variant: "outline",
-                size: "sm",
-                className: "min-w-0 flex-1 px-2",
-              })}
-            >
-              View
-            </Link>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={outOfStock}
+                onClick={addToEnquiry}
+                className={buttonClassName({
+                  variant: "primary",
+                  size: "sm",
+                  className: "min-w-0 flex-1 px-2",
+                })}
+              >
+                <ClipboardList className="h-3.5 w-3.5 shrink-0" strokeWidth={1.6} />
+                <span className="truncate">{added ? "Added" : "Enquire"}</span>
+              </button>
+              <Link
+                href={href}
+                className={buttonClassName({
+                  variant: "outline",
+                  size: "sm",
+                  className: "min-w-0 flex-1 px-2",
+                })}
+              >
+                View
+              </Link>
+            </div>
+            {added ? (
+              <p className="text-[11px] text-success">
+                Added to enquiry.{" "}
+                <Link href="/enquiry" className="underline underline-offset-2">
+                  View list
+                </Link>
+              </p>
+            ) : null}
+            {needOptions ? (
+              <p className="text-[11px] text-ink-soft">Choose options on the product page…</p>
+            ) : null}
           </div>
         </div>
       </div>

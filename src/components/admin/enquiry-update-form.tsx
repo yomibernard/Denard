@@ -2,19 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-
-const STATUSES = [
-  "NEW",
-  "WHATSAPP_OPENED",
-  "CUSTOMER_CONTACTED",
-  "AVAILABILITY_CONFIRMED",
-  "AWAITING_PAYMENT",
-  "PAYMENT_CONFIRMED",
-  "PROCESSING",
-  "DISPATCHED",
-  "COMPLETED",
-  "CANCELLED",
-] as const;
+import {
+  ENQUIRY_STATUSES,
+  enquiryStatusAdminHint,
+  enquiryStatusLabel,
+} from "@/lib/enquiry-status";
 
 const PAYMENT_STATUSES = ["NONE", "PENDING", "CONFIRMED", "FAILED", "REFUNDED"] as const;
 
@@ -95,12 +87,13 @@ export function EnquiryUpdateForm({
           value={values.status}
           onChange={(e) => setValues((v) => ({ ...v, status: e.target.value }))}
         >
-          {STATUSES.map((s) => (
+          {ENQUIRY_STATUSES.map((s) => (
             <option key={s} value={s}>
-              {s.replace(/_/g, " ")}
+              {enquiryStatusLabel(s)}
             </option>
           ))}
         </select>
+        <p className="mt-1.5 text-xs text-muted">{enquiryStatusAdminHint(values.status)}</p>
       </div>
       <div>
         <label className="mb-1 block text-xs font-medium text-ink-soft">Assign to</label>

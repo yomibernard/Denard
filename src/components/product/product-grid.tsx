@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ProductCard, type ProductCardData } from "@/components/product/product-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { ReactNode } from "react";
 
 export type ProductGridProps = {
@@ -18,7 +20,15 @@ export function ProductGrid({
   if (!products.length) {
     return (
       empty ?? (
-        <p className="py-16 text-center text-sm text-muted">No products found.</p>
+        <EmptyState
+          title="No products found"
+          description="Try clearing filters, browsing the full shop, or ask us on WhatsApp for a recommendation."
+          actions={[
+            { href: "/shop", label: "Shop all", variant: "primary" },
+            { href: "/how-to-order", label: "How to order", variant: "outline" },
+            { href: "/contact", label: "Contact", variant: "ghost" },
+          ]}
+        />
       )
     );
   }
@@ -38,5 +48,24 @@ export function ProductGrid({
         />
       ))}
     </div>
+  );
+}
+
+/** Optional clear-filters helper for listing pages that pass query strings. */
+export function ProductGridEmptyWithClear({ clearHref = "/shop" }: { clearHref?: string }) {
+  return (
+    <EmptyState
+      title="No products match"
+      description="Adjust your filters or start again from the full catalogue."
+      actions={[
+        { href: clearHref, label: "Clear filters", variant: "primary" },
+        { href: "/shop", label: "Shop all", variant: "outline" },
+        { href: "/contact", label: "Ask on WhatsApp", variant: "ghost" },
+      ]}
+    >
+      <Link href="/how-to-order" className="mb-4 text-xs text-accent hover:underline">
+        New here? See how ordering works
+      </Link>
+    </EmptyState>
   );
 }
