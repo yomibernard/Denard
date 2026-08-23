@@ -22,6 +22,7 @@ export async function GET() {
     time: new Date().toISOString(),
     database,
     media: mediaStorageMode(),
+    uptimeSec: Math.round(process.uptime()),
     env: {
       ok: env.ok,
       errors: env.errors,

@@ -7,6 +7,7 @@ import { formatPrice } from "@/lib/utils";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { stripeConfigured } from "@/lib/stripe";
 import { EnquiryUpdateForm } from "@/components/admin/enquiry-update-form";
+import { EnquiryAuditLog } from "@/components/admin/enquiry-audit-log";
 import { EnquiryPaymentLinkPanel } from "@/components/admin/enquiry-payment-link";
 import { requireAdminPage } from "@/lib/admin-page";
 import { enquiryStatusLabel } from "@/lib/enquiry-status";
@@ -251,6 +252,7 @@ export default async function AdminEnquiryDetailPage({ params }: Props) {
             paymentDate={toLocalInput(enquiry.paymentDate)}
             users={users}
           />
+          <EnquiryAuditLog enquiryId={enquiry.id} />
         </div>
       </div>
     </div>

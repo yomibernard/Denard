@@ -83,6 +83,10 @@ export async function POST(request: Request, ctx: Ctx) {
       }
 
       const buffer = Buffer.from(await file.arrayBuffer());
+      const { looksLikeImage } = await import("@/lib/upload-guard");
+      if (!looksLikeImage(buffer, file.type || "image/jpeg")) {
+        return jsonError(`File does not look like a valid image: ${file.name}`);
+      }
       const stored = await storeProductImage({
         productId,
         buffer,

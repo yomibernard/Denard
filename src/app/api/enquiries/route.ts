@@ -11,6 +11,7 @@ import {
   type WhatsAppProductLine,
 } from "@/lib/whatsapp";
 import { getWhatsAppPhone } from "@/lib/whatsapp-server";
+import { writeAudit } from "@/lib/audit";
 import type { DeliveryMethod, DeviceType, IntendedAction } from "@/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -89,6 +90,37 @@ export async function POST(request: Request) {
     }
 
     const data = parsed.data;
+    const idempotencyKey =
+      request.headers.get("idempotency-key")?.trim() ||
+      `${data.customerPhone.replace(/\D/g, "")}:${data.items
+        .map((i) => `${i.productId}:${i.quantity}`)
+        .sort()
+        .join(",")}`;
+
+    const recent = await prisma.enquiry.findFirst({
+      where: {
+        OR: [
+          { idempotencyKey },
+          {
+            customerPhone: data.customerPhone,
+            createdAt: { gte: new Date(Date.now() - 5 * 60 * 1000) },
+          },
+        ],
+      },
+      include: { items: true },
+      orderBy: { createdAt: "desc" },
+    });
+    if (recent) {
+      const phone = await getWhatsAppPhone();
+      return NextResponse.json({
+        reference: recent.reference,
+        duplicate: true,
+        confirmation: `We already have enquiry ${recent.reference}. Open WhatsApp to send it if you have not already.`,
+        whatsappUrl: phone
+          ? `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Hello Denard, following up on ${recent.reference}`)}`
+          : null,
+      });
+    }
 
     // Validate products exist and are enquiry-ready
     const productIds = [...new Set(data.items.map((i) => i.productId))];
@@ -132,6 +164,7 @@ export async function POST(request: Request) {
         currency,
         intendedAction,
         status: "NEW",
+        idempotencyKey,
         source: data.source,
         campaign: data.campaign,
         pageSource: data.pageSource,
@@ -245,6 +278,13 @@ export async function POST(request: Request) {
     } catch (emailErr) {
       console.warn("enquiry email notify skipped", emailErr);
     }
+
+    await writeAudit({
+      action: "enquiry.create",
+      entityType: "Enquiry",
+      entityId: enquiry.id,
+      details: { reference: enquiry.reference, source: data.source },
+    });
 
     return NextResponse.json({
       reference: enquiry.reference,

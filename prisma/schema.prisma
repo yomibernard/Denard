@@ -77,16 +77,20 @@ enum DeviceType {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  passwordHash String
-  name         String
-  role         UserRole  @default(CATALOGUE_ADMIN)
-  phone        String?
-  active       Boolean   @default(true)
-  lastLoginAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id                    String    @id @default(cuid())
+  email                 String    @unique
+  passwordHash          String
+  name                  String
+  role                  UserRole  @default(CATALOGUE_ADMIN)
+  phone                 String?
+  active                Boolean   @default(true)
+  totpSecret            String?
+  totpEnabled           Boolean   @default(false)
+  failedLoginCount      Int       @default(0)
+  lockedUntil           DateTime?
+  lastLoginAt           DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   assignedEnquiries Enquiry[]  @relation("AssignedRep")
   auditLogs         AuditLog[]
@@ -250,6 +254,7 @@ model Product {
   relatedTo    ProductRelation[] @relation("ProductTo")
   enquiryItems EnquiryItem[]
   reviews      ProductReview[]
+  waitlist     StockWaitlist[]
 }
 
 model ProductReview {
@@ -378,6 +383,7 @@ model SiteSetting {
 model Enquiry {
   id                   String         @id @default(cuid())
   reference            String         @unique
+  idempotencyKey       String?        @unique
   customerName         String
   customerPhone        String
   deliveryCity         String?
@@ -443,6 +449,37 @@ model AuditLog {
   createdAt  DateTime @default(now())
   userId     String?
   user       User?    @relation(fields: [userId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model StockWaitlist {
+  id        String    @id @default(cuid())
+  productId String
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name      String
+  phone     String
+  email     String?
+  notifiedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([productId, notifiedAt])
+  @@index([phone])
+}
+
+model PrivacyRequest {
+  id          String   @id @default(cuid())
+  kind        String
+  name        String
+  email       String
+  phone       String?
+  details     String?
+  status      String   @default("NEW")
+  createdAt   DateTime @default(now())
+  resolvedAt  DateTime?
+
+  @@index([status, createdAt])
 }
 
 model AnalyticsEvent {

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/product/breadcrumbs";
+import { PrivacyRequestForm } from "@/components/content/privacy-request-form";
 import { prisma } from "@/lib/db";
 import { absoluteUrl } from "@/lib/utils";
 
@@ -73,6 +74,7 @@ export async function ContentPage({
       <div className="mt-6 space-y-4 text-ink-soft whitespace-pre-wrap leading-relaxed">
         {body}
       </div>
+      {slug === "privacy" ? <PrivacyRequestForm /> : null}
     </article>
   );
 }

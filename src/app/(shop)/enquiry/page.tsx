@@ -9,6 +9,7 @@ import { trackEvent } from "@/lib/analytics";
 import { formatPrice } from "@/lib/utils";
 import { useEnquiryBasket } from "@/store/commerce";
 import type { IntendedActionType } from "@/lib/whatsapp";
+import { EnquiryOfflineBanner, persistFailedEnquiry } from "@/components/enquiry/offline-retry";
 import {
   cancelWhatsAppLaunch,
   completeWhatsAppLaunch,
@@ -80,6 +81,28 @@ export default function EnquiryPage() {
       if (!res.ok || !data.whatsappUrl) {
         cancelWhatsAppLaunch(prepared);
         setError(data.error ?? "Could not submit enquiry.");
+        try {
+          persistFailedEnquiry({
+            customerName: name,
+            customerPhone: phone,
+            deliveryCity: city,
+            deliveryCountry: country,
+            note: note || undefined,
+            intendedAction,
+            messageFormat: "multi",
+            source: "enquiry_bag",
+            items: items.map((i) => ({
+              productId: i.productId,
+              variantId: i.variantId,
+              productName: i.name,
+              productSku: i.sku,
+              quantity: i.quantity,
+              unitPrice: i.unitPrice,
+            })),
+          });
+        } catch {
+          /* ignore */
+        }
         return;
       }
       setReference(data.reference);
@@ -348,6 +371,7 @@ export default function EnquiryPage() {
             </div>
 
             {error ? <p className="text-sm text-danger">{error}</p> : null}
+            <EnquiryOfflineBanner />
 
             <Button type="submit" variant="whatsapp" className="min-h-12 w-full" disabled={submitting}>
               {submitting ? "Preparing…" : "Send all to WhatsApp"}

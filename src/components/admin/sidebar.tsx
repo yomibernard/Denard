@@ -27,6 +27,7 @@ const NAV = [
   { href: "/admin/content", label: "Content", icon: FileText, permission: "settings" as const },
   { href: "/admin/homepage", label: "Homepage", icon: Home, permission: "settings" as const },
   { href: "/admin/reports", label: "Reports", icon: BarChart3, permission: "reports" as const },
+  { href: "/admin/privacy", label: "Privacy", icon: FileText, permission: "settings" as const },
   { href: "/admin/settings", label: "Settings", icon: Settings, permission: "settings" as const },
   { href: "/admin/users", label: "Users", icon: Users, permission: "users" as const },
 ];

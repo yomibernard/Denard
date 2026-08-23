@@ -139,4 +139,7 @@ Never run destructive reset commands against production.
 - Admin UI and `/api/admin/*` are gated by `src/proxy.ts` + JWT session cookie.
 - Set `NEXT_PUBLIC_SITE_URL=https://denard.co.uk` so WhatsApp messages contain correct product links.
 - After DNS cutover, re-test one full enquiry on a real phone.
-- Monitor `/api/health` from your uptime provider.
+- Monitor `/api/health` from your uptime provider (Better Stack, UptimeRobot, or Vercel). Alert on HTTP 503 or `"database":"down"`.
+- Restore drill: once per quarter, restore a backup into a staging database and run `npx prisma migrate deploy`.
+
+Optional Turnstile (spam): `TURNSTILE_SECRET_KEY` + `NEXT_PUBLIC_TURNSTILE_SITE_KEY`.

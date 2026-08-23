@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { ProductForm } from "@/components/admin/product-form";
 import { ProductImageManager } from "@/components/admin/product-image-manager";
+import { WaitlistNotifyButton } from "@/components/admin/waitlist-notify-button";
 import { formatVariantsText } from "@/lib/product-admin";
 import { requireAdminPage } from "@/lib/admin-page";
 
@@ -19,7 +20,8 @@ export async function generateMetadata({ params }: Props) {
 export default async function EditProductPage({ params }: Props) {
   await requireAdminPage("products");
   const { id } = await params;
-  const [product, departments, brands, categories, collections, images] = await Promise.all([
+  const [product, departments, brands, categories, collections, images, waitlistPending] =
+    await Promise.all([
     prisma.product.findUnique({
       where: { id },
       include: {
@@ -36,6 +38,7 @@ export default async function EditProductPage({ params }: Props) {
       where: { productId: id },
       orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
     }),
+    prisma.stockWaitlist.count({ where: { productId: id, notifiedAt: null } }),
   ]);
   if (!product) notFound();
 
@@ -54,6 +57,8 @@ export default async function EditProductPage({ params }: Props) {
         productName={product.name}
         initialImages={images}
       />
+
+      <WaitlistNotifyButton productId={product.id} pendingCount={waitlistPending} />
 
       <ProductForm
         departments={departments}

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Columns2, Heart, MessageCircle, Minus, Plus, Share2, ZoomIn, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +26,7 @@ import {
   useRecentlyViewed,
   useWishlist,
 } from "@/store/commerce";
-import Link from "next/link";
+import { WaitlistSignup } from "@/components/product/waitlist-signup";
 
 export type PdpColour = { id: string; name: string; hex: string; slug: string };
 export type PdpSize = { id: string; name: string; slug: string };
@@ -375,6 +376,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         variant="whatsapp"
         className="min-h-12"
         onClick={() => openWaFlow("PAYMENT")}
+        disabled={unavailable}
       >
         <MessageCircle className="h-4 w-4" />
         Buy via WhatsApp
@@ -670,7 +672,12 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           </div>
         </div>
 
-        {error ? <p className="mt-3 text-sm text-danger">{error}</p> : null}
+        {unavailable ? (
+          <>
+            <p className="mt-4 text-sm font-medium text-amber">Currently out of stock.</p>
+            <WaitlistSignup productId={product.id} productName={product.name} />
+          </>
+        ) : null}
         {addedFlash ? (
           <p className="mt-3 text-sm text-success">
             Added to enquiry list.{" "}

@@ -53,7 +53,7 @@ export async function createSession(user: SessionUser) {
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("7d")
+    .setExpirationTime("8h")
     .sign(authSecretBytes());
 
   const jar = await cookies();
@@ -62,7 +62,7 @@ export async function createSession(user: SessionUser) {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: 60 * 60 * 8,
   });
 }
 
@@ -110,9 +110,25 @@ export async function authenticate(email: string, password: string) {
     where: { email: { in: aliases } },
   });
   if (!user || !user.active) return null;
+  if (user.lockedUntil && user.lockedUntil > new Date()) {
+    return null;
+  }
   const ok = await verifyPassword(password, user.passwordHash);
-  if (!ok) return null;
-  await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+  if (!ok) {
+    const fails = (user.failedLoginCount ?? 0) + 1;
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        failedLoginCount: fails,
+        lockedUntil: fails >= 8 ? new Date(Date.now() + 15 * 60 * 1000) : null,
+      },
+    });
+    return null;
+  }
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { lastLoginAt: new Date(), failedLoginCount: 0, lockedUntil: null },
+  });
   return {
     id: user.id,
     email: user.email,

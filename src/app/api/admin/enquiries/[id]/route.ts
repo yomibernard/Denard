@@ -64,6 +64,18 @@ export async function PATCH(request: Request, ctx: Ctx) {
         items: true,
       },
     });
+    const { writeAudit } = await import("@/lib/audit");
+    await writeAudit({
+      action: "enquiry.update",
+      entityType: "Enquiry",
+      entityId: enquiry.id,
+      userId: session.id,
+      details: {
+        status: enquiry.status,
+        paymentStatus: enquiry.paymentStatus,
+        assignedToId: enquiry.assignedToId,
+      },
+    });
     return jsonOk({ enquiry });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Update failed";
