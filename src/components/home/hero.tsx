@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { buttonClassName } from "@/components/ui/button";
 import { buildWhatsAppUrl, generalAssistanceMessage } from "@/lib/whatsapp";
 import { MediaVideo } from "@/components/home/media-video";
+import { shopImageProps } from "@/lib/shop-image";
 
 export type HeroProps = {
   title?: string;
@@ -92,6 +93,7 @@ export function Hero({
                 priority
                 sizes="(max-width:768px) 100vw, 50vw"
                 className="object-cover object-center md:hidden"
+                {...shopImageProps(imageSrcMobile)}
               />
               <Image
                 src={imageSrc}
@@ -100,6 +102,7 @@ export function Hero({
                 priority
                 sizes="50vw"
                 className="hidden object-cover object-center md:block"
+                {...shopImageProps(imageSrc)}
               />
             </>
           )}

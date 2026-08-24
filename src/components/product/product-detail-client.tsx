@@ -13,6 +13,7 @@ import {
   type WhatsAppEnquiryReady,
 } from "@/components/enquiry/whatsapp-enquiry-modal";
 import { trackEvent } from "@/lib/analytics";
+import { shopImageProps } from "@/lib/shop-image";
 import type { IntendedActionType } from "@/lib/whatsapp";
 import {
   cancelWhatsAppLaunch,
@@ -399,7 +400,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               alt={images[activeImage]?.alt || product.name}
               fill
               priority
-              unoptimized={(images[activeImage]?.url ?? images[0].url).startsWith("http")}
+              {...shopImageProps(images[activeImage]?.url ?? images[0].url)}
               className="object-cover"
               sizes="(max-width:1024px) 100vw, 50vw"
             />
@@ -425,7 +426,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                     src={img.url}
                     alt={`${product.name} view ${i + 1}`}
                     fill
-                    unoptimized={img.url.startsWith("http")}
+                    {...shopImageProps(img.url)}
                     className="object-cover"
                     sizes="56px"
                   />
@@ -490,7 +491,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                 src={images[activeImage]?.url ?? images[0].url}
                 alt={images[activeImage]?.alt || product.name}
                 fill
-                unoptimized={(images[activeImage]?.url ?? images[0].url).startsWith("http")}
+                {...shopImageProps(images[activeImage]?.url ?? images[0].url)}
                 className="object-contain"
                 sizes="100vw"
               />

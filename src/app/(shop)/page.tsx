@@ -18,6 +18,7 @@ import { prisma } from "@/lib/db";
 import { buildPageMetadata } from "@/lib/seo";
 import { buildWhatsAppUrl, generalAssistanceMessage } from "@/lib/whatsapp";
 import { getWhatsAppPhone } from "@/lib/whatsapp-server";
+import { shopImageProps } from "@/lib/shop-image";
 import { MessageCircle, ShieldCheck, Truck, Sparkles } from "lucide-react";
 
 export const revalidate = 120;
@@ -112,6 +113,7 @@ export default async function HomePage() {
                 fill
                 className="object-cover transition duration-500 group-hover:scale-[1.03]"
                 sizes="(max-width:768px) 50vw, 25vw"
+                {...shopImageProps(cat.image)}
               />
               <div className="absolute inset-0 bg-ink/30 transition group-hover:bg-ink/40" />
               <span className="absolute inset-x-0 bottom-0 p-3 font-display text-xl text-white sm:p-4 sm:text-2xl md:text-3xl">
@@ -142,6 +144,7 @@ export default async function HomePage() {
                   fill
                   className="object-cover transition duration-500 group-hover:scale-[1.03]"
                   sizes="(max-width:768px) 50vw, 25vw"
+                  {...shopImageProps(d.imageUrl ?? "/images/brand/category-new.svg")}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-ink/65 via-transparent to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-4">

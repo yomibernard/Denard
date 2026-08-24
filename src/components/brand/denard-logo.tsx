@@ -59,6 +59,7 @@ export function DenardLogo({
       width={asset.width}
       height={asset.height}
       priority={priority}
+      quality={95}
       sizes="(max-width: 768px) 180px, 220px"
       className={cn(
         "h-auto w-auto max-w-none object-contain object-left",

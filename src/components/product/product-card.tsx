@@ -8,6 +8,7 @@ import { buttonClassName } from "@/components/ui/button";
 import { cn, discountPercent, formatPrice } from "@/lib/utils";
 import { useCompare, useEnquiryBasket, useWishlist } from "@/store/commerce";
 import { trackEvent } from "@/lib/analytics";
+import { shopImageProps } from "@/lib/shop-image";
 import { useState } from "react";
 
 export type ProductCardColour = {
@@ -155,7 +156,7 @@ export function ProductCard({ product, className, priority }: ProductCardProps) 
                 fill
                 sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 priority={priority}
-                unoptimized={primary.url.startsWith("http")}
+                {...shopImageProps(primary.url)}
                 className={cn(
                   "object-cover object-center transition-opacity duration-500",
                   secondary && "group-hover:opacity-0",
@@ -174,7 +175,7 @@ export function ProductCard({ product, className, priority }: ProductCardProps) 
                   alt={secondary.alt || `${product.name} alternate`}
                   fill
                   sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  unoptimized={secondary.url.startsWith("http")}
+                  {...shopImageProps(secondary.url)}
                   className="object-cover object-center opacity-0 transition-opacity duration-500 group-hover:opacity-100"
                 />
               ) : null}
