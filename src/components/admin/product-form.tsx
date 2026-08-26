@@ -50,18 +50,22 @@ export function ProductForm({
   brands,
   categories,
   collections,
+  imageCount = 0,
 }: {
   initial: ProductFormValues;
   departments: Option[];
   brands: Option[];
   categories: Option[];
   collections: Option[];
+  imageCount?: number;
 }) {
   const router = useRouter();
   const [values, setValues] = useState(initial);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const isEdit = Boolean(initial.id);
+  const isLive = values.status === "PUBLISHED";
 
   function set<K extends keyof ProductFormValues>(key: K, value: ProductFormValues[K]) {
     setValues((v) => ({ ...v, [key]: value }));
@@ -73,30 +77,49 @@ export function ProductForm({
     }
   }
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    startTransition(async () => {
-      const payload = {
-        ...values,
-        price: Number(values.price),
-        compareAtPrice:
-          values.compareAtPrice === "" || values.compareAtPrice == null
-            ? null
-            : Number(values.compareAtPrice),
-        stockQty:
-          values.stockQty === "" || values.stockQty == null ? null : Number(values.stockQty),
-        departmentId: values.departmentId || null,
-        brandId: values.brandId || null,
-        categoryIds: values.categoryIds,
-        collectionIds: values.collectionIds,
-        careInstructions: values.careInstructions || null,
-        sizeGuide: values.sizeGuide || null,
-        metaTitle: values.metaTitle || null,
-        metaDescription: values.metaDescription || null,
-        variantsText: values.variantsText,
-      };
+  function buildPayload(statusOverride?: string) {
+    const status = statusOverride ?? values.status;
+    return {
+      ...values,
+      status,
+      price: Number(values.price),
+      compareAtPrice:
+        values.compareAtPrice === "" || values.compareAtPrice == null
+          ? null
+          : Number(values.compareAtPrice),
+      stockQty:
+        values.stockQty === "" || values.stockQty == null ? null : Number(values.stockQty),
+      departmentId: values.departmentId || null,
+      brandId: values.brandId || null,
+      categoryIds: values.categoryIds,
+      collectionIds: values.collectionIds,
+      careInstructions: values.careInstructions || null,
+      sizeGuide: values.sizeGuide || null,
+      metaTitle: values.metaTitle || null,
+      metaDescription: values.metaDescription || null,
+      variantsText: values.variantsText,
+    };
+  }
 
+  function save(statusOverride?: string) {
+    setError(null);
+    setMessage(null);
+    const nextStatus = statusOverride ?? values.status;
+    if (nextStatus === "PUBLISHED") {
+      if (!values.name.trim() || !values.sku.trim() || values.price === "") {
+        setError("Name, SKU and price are required before publishing.");
+        return;
+      }
+      if (imageCount < 1 && isEdit) {
+        const ok = confirm(
+          "This product has no photos yet. Publish anyway? Customers will see a blank image until you upload one.",
+        );
+        if (!ok) return;
+      }
+    }
+
+    startTransition(async () => {
+      const payload = buildPayload(statusOverride);
       const res = await fetch(
         isEdit ? `/api/admin/products/${initial.id}` : "/api/admin/products",
         {
@@ -110,14 +133,25 @@ export function ProductForm({
         setError(data.error ?? "Save failed");
         return;
       }
+      if (statusOverride) set("status", statusOverride);
       const id = data.product?.id ?? initial.id;
+      if (nextStatus === "PUBLISHED") {
+        setMessage("Live on the shop. Customers can see and enquire about this product now.");
+      } else {
+        setMessage("Saved as draft. Use “Save & publish” when you are ready to go live.");
+      }
       router.push(`/admin/products/${id}`);
       router.refresh();
     });
   }
 
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    save();
+  }
+
   async function archive() {
-    if (!initial.id || !confirm("Archive this product?")) return;
+    if (!initial.id || !confirm("Archive this product? It will leave the live shop.")) return;
     const res = await fetch(`/api/admin/products/${initial.id}`, { method: "DELETE" });
     if (res.ok) {
       router.push("/admin/products");
@@ -125,14 +159,32 @@ export function ProductForm({
     }
   }
 
+  async function unpublish() {
+    if (!confirm("Unpublish? The product will leave the live shop until you publish again.")) return;
+    save("DRAFT");
+  }
+
   return (
     <form onSubmit={onSubmit} className="max-w-3xl space-y-6">
+      {isLive ? (
+        <div className="rounded-lg border border-accent/40 bg-mint-soft/50 px-4 py-3 text-sm">
+          <p className="font-semibold text-ink">Live on the shop</p>
+          <p className="mt-1 text-xs text-ink-soft">
+            Edits and image changes apply immediately — no developer needed. Use Unpublish to take it
+            offline.
+          </p>
+        </div>
+      ) : null}
+
       {error ? (
         <p className="rounded border border-danger/30 bg-danger/5 px-3 py-2 text-sm text-danger">{error}</p>
       ) : null}
+      {message ? (
+        <p className="rounded border border-accent/30 bg-mint-soft/40 px-3 py-2 text-sm text-ink">{message}</p>
+      ) : null}
 
       <div className="rounded-lg border border-line bg-mint-soft/40 p-4 text-sm">
-        <p className="font-semibold text-ink">Before publishing</p>
+        <p className="font-semibold text-ink">Go-live checklist</p>
         <ul className="mt-2 space-y-1 text-xs text-ink-soft">
           <li className={values.name && values.sku && values.price !== "" ? "text-success" : ""}>
             {values.name && values.sku && values.price !== "" ? "✓" : "○"} Name, SKU and price set
@@ -143,20 +195,15 @@ export function ProductForm({
           <li className={values.departmentId || values.categoryIds.length ? "text-success" : ""}>
             {values.departmentId || values.categoryIds.length ? "✓" : "○"} Department or categories selected
           </li>
+          <li className={imageCount > 0 ? "text-success" : ""}>
+            {imageCount > 0 ? "✓" : "○"} At least one photo uploaded ({imageCount} on file)
+          </li>
           <li className={values.availability !== "OUT_OF_STOCK" || values.status !== "PUBLISHED" ? "text-success" : "text-amber"}>
             {values.status === "PUBLISHED" && values.availability === "OUT_OF_STOCK"
               ? "! Published but marked out of stock — customers may still see it as unavailable"
               : "✓ Availability matches stock"}
           </li>
-          <li className="text-muted">
-            ○ Upload at least one real photo on the product Images tab after save
-          </li>
         </ul>
-        {values.status === "PUBLISHED" && (!values.shortDescription.trim() || (!values.departmentId && !values.categoryIds.length)) ? (
-          <p className="mt-2 text-xs text-amber">
-            Publishing without description or taxonomy makes the product harder to find in the shop.
-          </p>
-        ) : null}
       </div>
 
       <div className="grid gap-4 rounded-lg border border-line bg-white p-5 shadow-sm sm:grid-cols-2">
@@ -185,6 +232,7 @@ export function ProductForm({
           <select id="status" className={field} value={values.status} onChange={(e) => set("status", e.target.value)}>
             {STATUSES.map((s) => (<option key={s} value={s}>{s}</option>))}
           </select>
+          <p className="mt-1 text-[11px] text-muted">Or use the Publish button below — no tech team required.</p>
         </div>
         <div>
           <label className={label} htmlFor="availability">Availability</label>
@@ -222,7 +270,10 @@ export function ProductForm({
 
       <div className="rounded-lg border border-line bg-white p-5 shadow-sm">
         <h2 className="text-sm font-semibold">Merchandising</h2>
-        <p className="mt-1 text-xs text-muted">Categories and collections control where the product appears on the shop.</p>
+        <p className="mt-1 text-xs text-muted">
+          Categories and collections control where the product appears. Create new ones under{" "}
+          <a href="/admin/catalogue" className="text-accent hover:underline">Catalogue</a>.
+        </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <fieldset>
             <legend className={label}>Categories</legend>
@@ -299,9 +350,32 @@ export function ProductForm({
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <button type="submit" disabled={pending} className="h-10 rounded bg-accent px-5 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-60">
-          {pending ? "Saving…" : isEdit ? "Save changes" : "Create product"}
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => save(isLive ? "PUBLISHED" : "DRAFT")}
+          className="h-10 rounded border border-line bg-white px-5 text-sm font-medium hover:bg-sand disabled:opacity-60"
+        >
+          {pending ? "Saving…" : isLive ? "Save changes" : isEdit ? "Save draft" : "Create as draft"}
         </button>
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => save("PUBLISHED")}
+          className="h-10 rounded bg-accent px-5 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-60"
+        >
+          {pending ? "Publishing…" : isLive ? "Save & keep live" : "Save & publish (go live)"}
+        </button>
+        {isEdit && isLive ? (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={unpublish}
+            className="h-10 rounded border border-line px-4 text-sm hover:bg-sand disabled:opacity-60"
+          >
+            Unpublish
+          </button>
+        ) : null}
         {isEdit ? (
           <button type="button" onClick={archive} className="h-10 rounded border border-line px-4 text-sm text-danger hover:bg-sand">
             Archive

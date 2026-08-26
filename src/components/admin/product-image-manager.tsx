@@ -17,10 +17,12 @@ export function ProductImageManager({
   productId,
   productName,
   initialImages,
+  isPublished = false,
 }: {
   productId: string;
   productName: string;
   initialImages: AdminProductImage[];
+  isPublished?: boolean;
 }) {
   const [images, setImages] = useState(initialImages);
   const [error, setError] = useState<string | null>(null);
@@ -149,9 +151,14 @@ export function ProductImageManager({
         <div>
           <h2 className="text-base font-semibold text-ink">Product images</h2>
           <p className="mt-1 text-xs text-muted">
-            Upload JPG, PNG or WebP (max 8MB each). The first / starred image is the main photo on
-            the shop.
+            Upload JPG, PNG or WebP (max 8MB each). The starred image is the main photo on the shop.
+            To replace a photo: upload the new one, set it as main, then remove the old one.
           </p>
+          {isPublished ? (
+            <p className="mt-2 text-xs font-medium text-accent">
+              This product is live — image changes show on the shop immediately.
+            </p>
+          ) : null}
         </div>
         {pending ? <Loader2 className="h-4 w-4 animate-spin text-muted" /> : null}
       </div>

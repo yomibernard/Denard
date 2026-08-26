@@ -8,6 +8,7 @@ export function ProductCsvImport() {
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [publishImmediately, setPublishImmediately] = useState(false);
 
   function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -17,6 +18,7 @@ export function ProductCsvImport() {
     startTransition(async () => {
       const form = new FormData();
       form.append("file", file);
+      if (publishImmediately) form.append("publishImmediately", "true");
       const res = await fetch("/api/admin/products/import", { method: "POST", body: form });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -25,10 +27,12 @@ export function ProductCsvImport() {
       }
       setMessage(
         `Imported: ${data.created ?? 0} created, ${data.updated ?? 0} updated` +
+          (publishImmediately ? " · published live" : " · left as draft (unless CSV set status)") +
           (data.errors?.length ? ` · ${data.errors.length} row errors` : ""),
       );
       router.refresh();
     });
+    e.target.value = "";
   }
 
   return (
@@ -40,6 +44,21 @@ export function ProductCsvImport() {
           Download template
         </a>
       </p>
+      <label className="mt-3 flex items-start gap-2 text-sm">
+        <input
+          type="checkbox"
+          className="mt-0.5"
+          checked={publishImmediately}
+          onChange={(e) => setPublishImmediately(e.target.checked)}
+        />
+        <span>
+          <span className="font-medium">Publish imported products immediately</span>
+          <span className="mt-0.5 block text-xs text-muted">
+            Tick this to put every row live on the shop after upload — no developer needed. Leave
+            unticked to keep them as drafts until you publish each one.
+          </span>
+        </span>
+      </label>
       <input
         type="file"
         accept=".csv,text/csv"

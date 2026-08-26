@@ -85,6 +85,103 @@ function CreateForm({
   );
 }
 
+function EditRow({
+  row,
+  endpoint,
+  fields,
+  onDone,
+  onCancel,
+}: {
+  row: Row;
+  endpoint: string;
+  fields: { key: string; label: string; options?: { id: string; name: string }[] }[];
+  onDone: () => void;
+  onCancel: () => void;
+}) {
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [name, setName] = useState(row.name);
+  const [slug, setSlug] = useState(row.slug);
+  const [departmentId, setDepartmentId] = useState(String(row.departmentId ?? ""));
+
+  function save() {
+    setError(null);
+    startTransition(async () => {
+      const body: Record<string, unknown> = {
+        id: row.id,
+        name: name.trim(),
+        slug: slug.trim() || slugify(name),
+      };
+      if (fields.some((f) => f.key === "departmentId")) {
+        body.departmentId = departmentId || null;
+      }
+      const res = await fetch(endpoint, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? "Update failed");
+        return;
+      }
+      onDone();
+    });
+  }
+
+  return (
+    <tr className="border-t border-line bg-mint-soft/30">
+      <td className="py-2 pr-3" colSpan={5}>
+        <div className="flex flex-wrap items-end gap-2">
+          <div>
+            <label className="mb-1 block text-[11px] text-muted">Name</label>
+            <input className={field} value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div>
+            <label className="mb-1 block text-[11px] text-muted">Slug</label>
+            <input className={field} value={slug} onChange={(e) => setSlug(e.target.value)} />
+          </div>
+          {fields.some((f) => f.key === "departmentId") ? (
+            <div>
+              <label className="mb-1 block text-[11px] text-muted">Department</label>
+              <select
+                className={field}
+                value={departmentId}
+                onChange={(e) => setDepartmentId(e.target.value)}
+              >
+                <option value="">—</option>
+                {fields
+                  .find((f) => f.key === "departmentId")
+                  ?.options?.map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          ) : null}
+          <button
+            type="button"
+            disabled={pending}
+            onClick={save}
+            className="h-9 rounded bg-accent px-3 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-60"
+          >
+            {pending ? "Saving…" : "Save"}
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="h-9 rounded border border-line px-3 text-sm hover:bg-sand"
+          >
+            Cancel
+          </button>
+          {error ? <p className="w-full text-xs text-danger">{error}</p> : null}
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 function CatalogueSection({
   title,
   rows,
@@ -99,6 +196,7 @@ function CatalogueSection({
   extraCols?: (row: Row) => React.ReactNode;
 }) {
   const router = useRouter();
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   async function toggleActive(row: Row) {
     await fetch(endpoint, {
@@ -112,6 +210,7 @@ function CatalogueSection({
   return (
     <section className="rounded-lg border border-line bg-white p-4 shadow-sm">
       <h2 className="text-sm font-semibold">{title}</h2>
+      <p className="mt-1 text-xs text-muted">Add new rows below, or edit name/slug in place.</p>
       <div className="mt-3 overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead className="text-xs uppercase text-muted">
@@ -124,23 +223,46 @@ function CatalogueSection({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr key={row.id} className="border-t border-line">
-                <td className="py-2 pr-3 font-medium">{row.name}</td>
-                <td className="py-2 pr-3 font-mono text-xs text-muted">{row.slug}</td>
-                <td className="py-2 pr-3 text-xs">{row.active ? "Yes" : "No"}</td>
-                {extraCols ? <td className="py-2 pr-3 text-xs text-muted">{extraCols(row)}</td> : null}
-                <td className="py-2 text-right">
-                  <button
-                    type="button"
-                    onClick={() => toggleActive(row)}
-                    className="text-xs font-medium text-accent hover:underline"
-                  >
-                    {row.active ? "Deactivate" : "Activate"}
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {rows.map((row) =>
+              editingId === row.id ? (
+                <EditRow
+                  key={row.id}
+                  row={row}
+                  endpoint={endpoint}
+                  fields={fields}
+                  onCancel={() => setEditingId(null)}
+                  onDone={() => {
+                    setEditingId(null);
+                    router.refresh();
+                  }}
+                />
+              ) : (
+                <tr key={row.id} className="border-t border-line">
+                  <td className="py-2 pr-3 font-medium">{row.name}</td>
+                  <td className="py-2 pr-3 font-mono text-xs text-muted">{row.slug}</td>
+                  <td className="py-2 pr-3 text-xs">{row.active ? "Yes" : "No"}</td>
+                  {extraCols ? <td className="py-2 pr-3 text-xs text-muted">{extraCols(row)}</td> : null}
+                  <td className="py-2 text-right">
+                    <div className="flex justify-end gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setEditingId(row.id)}
+                        className="text-xs font-medium text-accent hover:underline"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleActive(row)}
+                        className="text-xs font-medium text-muted hover:underline"
+                      >
+                        {row.active ? "Deactivate" : "Activate"}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ),
+            )}
             {rows.length === 0 ? (
               <tr>
                 <td colSpan={5} className="py-4 text-center text-muted">
@@ -163,7 +285,7 @@ export function CatalogueManager({
   brands,
 }: {
   departments: Row[];
-  categories: (Row & { department?: { name: string } | null })[];
+  categories: (Row & { department?: { name: string } | null; departmentId?: string | null })[];
   collections: Row[];
   brands: Row[];
 }) {

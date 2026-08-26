@@ -60,7 +60,8 @@ export default async function AdminProductsPage({
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Products</h1>
           <p className="mt-1 text-sm text-muted">
-            {products.length} shown
+            Create, edit photos, and publish to the live shop yourself — no technical team needed.
+            {products.length ? ` · ${products.length} shown` : ""}
             {lowStockCount ? (
               <>
                 {" · "}

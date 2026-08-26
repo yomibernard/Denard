@@ -56,16 +56,19 @@ export async function POST(request: Request) {
   try {
     const contentType = request.headers.get("content-type") ?? "";
     let csvText = "";
+    let publishImmediately = false;
     if (contentType.includes("multipart/form-data")) {
       const form = await request.formData();
       const file = form.get("file");
       if (!(file instanceof File)) return jsonError("CSV file required");
       csvText = await file.text();
+      publishImmediately = String(form.get("publishImmediately") ?? "") === "true";
     } else if (contentType.includes("text/csv") || contentType.includes("text/plain")) {
       csvText = await request.text();
     } else {
       const body = await request.json().catch(() => null);
       csvText = String(body?.csv ?? "");
+      publishImmediately = Boolean(body?.publishImmediately);
     }
 
     const rows = parseCsv(csvText);
@@ -96,7 +99,10 @@ export async function POST(request: Request) {
       }
 
       const slug = (get("slug") || slugify(name)).trim() || slugify(name);
-      const status = (get("status") || "DRAFT").toUpperCase() as ProductStatus;
+      const statusFromCsv = (get("status") || "").toUpperCase();
+      const status = (
+        publishImmediately ? "PUBLISHED" : statusFromCsv || "DRAFT"
+      ) as ProductStatus;
       const availability = (get("availability") || "IN_STOCK").toUpperCase() as AvailabilityStatus;
       const stockRaw = get("stockqty") || get("stock");
       const stockQty = stockRaw ? Number(stockRaw) : null;
@@ -154,7 +160,7 @@ export async function GET() {
 
   const sample =
     "sku,name,price,slug,status,availability,stockQty,shortDescription,compareAtPrice\n" +
-    "DN-SAMPLE-01,Sample Gold Hoop,42,sample-gold-hoop,DRAFT,IN_STOCK,10,Everyday hoop earring,\n";
+    "DN-SAMPLE-01,Sample Gold Hoop,42,sample-gold-hoop,PUBLISHED,IN_STOCK,10,Everyday hoop earring,\n";
 
   return new NextResponse(sample, {
     headers: {

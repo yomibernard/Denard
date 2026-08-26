@@ -23,7 +23,8 @@ export default async function NewProductPage() {
         </Link>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight">New product</h1>
         <p className="mt-1 text-sm text-muted">
-          Create the product first, then upload images on the next screen.
+          Fill in details, then use <strong>Save &amp; publish</strong> to go live, or save as draft
+          first and upload photos on the next screen.
         </p>
       </div>
       <ProductForm

@@ -49,13 +49,25 @@ export default async function EditProductPage({ params }: Props) {
           ← Products
         </Link>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight">{product.name}</h1>
-        <p className="text-sm text-muted">{product.sku}</p>
+        <p className="text-sm text-muted">
+          {product.sku}
+          {product.status === "PUBLISHED" ? (
+            <span className="ml-2 rounded bg-mint-soft px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-accent">
+              Live
+            </span>
+          ) : (
+            <span className="ml-2 rounded bg-sand px-1.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted">
+              {product.status}
+            </span>
+          )}
+        </p>
       </div>
 
       <ProductImageManager
         productId={product.id}
         productName={product.name}
         initialImages={images}
+        isPublished={product.status === "PUBLISHED"}
       />
 
       <WaitlistNotifyButton productId={product.id} pendingCount={waitlistPending} />
@@ -65,6 +77,7 @@ export default async function EditProductPage({ params }: Props) {
         brands={brands}
         categories={categories}
         collections={collections}
+        imageCount={images.length}
         initial={{
           id: product.id,
           name: product.name,

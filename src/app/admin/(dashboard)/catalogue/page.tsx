@@ -21,7 +21,10 @@ export default async function AdminCataloguePage() {
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Catalogue</h1>
-        <p className="mt-1 text-sm text-muted">Departments, categories, collections, and brands</p>
+        <p className="mt-1 text-sm text-muted">
+          Add and edit departments, categories, collections, and brands. Changes appear in the product
+          form immediately — no developer needed.
+        </p>
       </div>
       <CatalogueManager
         departments={departments}

@@ -17,7 +17,13 @@ type ProductRow = {
   department: { name: string } | null;
 };
 
-export function ProductActions({ productId }: { productId: string }) {
+export function ProductActions({
+  productId,
+  status,
+}: {
+  productId: string;
+  status: string;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 
@@ -37,15 +43,47 @@ export function ProductActions({ productId }: { productId: string }) {
     }
   }
 
+  async function publish() {
+    if (!confirm("Publish this product to the live shop now?")) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/admin/products/${productId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "PUBLISHED" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.error ?? "Publish failed");
+        return;
+      }
+      router.refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <button
-      type="button"
-      disabled={busy}
-      onClick={duplicate}
-      className="text-xs font-medium text-accent hover:underline disabled:opacity-50"
-    >
-      {busy ? "…" : "Duplicate"}
-    </button>
+    <div className="flex items-center gap-3">
+      {status !== "PUBLISHED" && status !== "ARCHIVED" ? (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={publish}
+          className="text-xs font-medium text-accent hover:underline disabled:opacity-50"
+        >
+          {busy ? "…" : "Publish"}
+        </button>
+      ) : null}
+      <button
+        type="button"
+        disabled={busy}
+        onClick={duplicate}
+        className="text-xs font-medium text-muted hover:underline disabled:opacity-50"
+      >
+        {busy ? "…" : "Duplicate"}
+      </button>
+    </div>
   );
 }
 
@@ -83,7 +121,13 @@ export function ProductsTable({ products }: { products: ProductRow[] }) {
                 </td>
                 <td className="px-4 py-2.5 font-mono text-xs">{p.sku}</td>
                 <td className="px-4 py-2.5">
-                  <span className="rounded bg-sand px-1.5 py-0.5 text-[11px] font-medium">
+                  <span
+                    className={
+                      p.status === "PUBLISHED"
+                        ? "rounded bg-mint-soft px-1.5 py-0.5 text-[11px] font-semibold text-accent"
+                        : "rounded bg-sand px-1.5 py-0.5 text-[11px] font-medium"
+                    }
+                  >
                     {p.status}
                   </span>
                 </td>
@@ -119,7 +163,7 @@ export function ProductsTable({ products }: { products: ProductRow[] }) {
                     <Link href={`/admin/products/${p.id}`} className="text-xs font-medium hover:text-accent">
                       Edit
                     </Link>
-                    <ProductActions productId={p.id} />
+                    <ProductActions productId={p.id} status={p.status} />
                   </div>
                 </td>
               </tr>
