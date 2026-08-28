@@ -1,4 +1,4 @@
-﻿-- CreateTable
+-- CreateTable
 CREATE TABLE "ProductReview" (
     "id" TEXT NOT NULL,
     "productId" TEXT NOT NULL,
