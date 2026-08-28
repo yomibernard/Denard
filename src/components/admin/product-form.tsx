@@ -1,8 +1,9 @@
 ﻿"use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { slugify } from "@/lib/utils";
+import { productReadyToPublish } from "@/lib/product-publish";
 
 export type ProductFormValues = {
   id?: string;
@@ -51,6 +52,11 @@ export function ProductForm({
   categories,
   collections,
   imageCount = 0,
+  liveStatus,
+  onValuesChange,
+  onProductCreated,
+  onStatusChange,
+  hidePreview = false,
 }: {
   initial: ProductFormValues;
   departments: Option[];
@@ -58,6 +64,11 @@ export function ProductForm({
   categories: Option[];
   collections: Option[];
   imageCount?: number;
+  liveStatus?: string;
+  onValuesChange?: (values: ProductFormValues) => void;
+  onProductCreated?: (id: string, name: string, slug: string, status: string) => void;
+  onStatusChange?: (status: string) => void;
+  hidePreview?: boolean;
 }) {
   const router = useRouter();
   const [values, setValues] = useState(initial);
@@ -65,7 +76,12 @@ export function ProductForm({
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const isEdit = Boolean(initial.id);
-  const isLive = values.status === "PUBLISHED";
+  const effectiveStatus = liveStatus ?? values.status;
+  const isLive = effectiveStatus === "PUBLISHED";
+
+  useEffect(() => {
+    onValuesChange?.(values);
+  }, [values, onValuesChange]);
 
   function set<K extends keyof ProductFormValues>(key: K, value: ProductFormValues[K]) {
     setValues((v) => ({ ...v, [key]: value }));
@@ -110,11 +126,9 @@ export function ProductForm({
         setError("Name, SKU and price are required before publishing.");
         return;
       }
-      if (imageCount < 1 && isEdit) {
-        const ok = confirm(
-          "This product has no photos yet. Publish anyway? Customers will see a blank image until you upload one.",
-        );
-        if (!ok) return;
+      if (imageCount < 1) {
+        setError("Upload at least one product photo before publishing.");
+        return;
       }
     }
 
@@ -135,13 +149,22 @@ export function ProductForm({
       }
       if (statusOverride) set("status", statusOverride);
       const id = data.product?.id ?? initial.id;
-      if (nextStatus === "PUBLISHED") {
+      const savedName = data.product?.name ?? values.name;
+      const savedSlug = data.product?.slug ?? values.slug;
+      onStatusChange?.(nextStatus);
+      if (!isEdit && onProductCreated) {
+        onProductCreated(id, savedName, savedSlug, nextStatus);
+      } else if (nextStatus === "PUBLISHED") {
         setMessage("Live on the shop. Customers can see and enquire about this product now.");
+        router.refresh();
       } else {
-        setMessage("Saved as draft. Use “Save & publish” when you are ready to go live.");
+        setMessage("Saved as draft. Upload a photo to go live automatically.");
+        if (isEdit) router.refresh();
       }
-      router.push(`/admin/products/${id}`);
-      router.refresh();
+      if (!onProductCreated) {
+        router.push(`/admin/products/${id}`);
+        router.refresh();
+      }
     });
   }
 
@@ -183,6 +206,7 @@ export function ProductForm({
         <p className="rounded border border-accent/30 bg-mint-soft/40 px-3 py-2 text-sm text-ink">{message}</p>
       ) : null}
 
+      {!hidePreview ? (
       <div className="rounded-lg border border-line bg-mint-soft/40 p-4 text-sm">
         <p className="font-semibold text-ink">Go-live checklist</p>
         <ul className="mt-2 space-y-1 text-xs text-ink-soft">
@@ -198,13 +222,25 @@ export function ProductForm({
           <li className={imageCount > 0 ? "text-success" : ""}>
             {imageCount > 0 ? "✓" : "○"} At least one photo uploaded ({imageCount} on file)
           </li>
-          <li className={values.availability !== "OUT_OF_STOCK" || values.status !== "PUBLISHED" ? "text-success" : "text-amber"}>
-            {values.status === "PUBLISHED" && values.availability === "OUT_OF_STOCK"
+          <li className={effectiveStatus !== "PUBLISHED" || values.availability !== "OUT_OF_STOCK" ? "text-success" : "text-amber"}>
+            {effectiveStatus === "PUBLISHED" && values.availability === "OUT_OF_STOCK"
               ? "! Published but marked out of stock — customers may still see it as unavailable"
               : "✓ Availability matches stock"}
           </li>
         </ul>
+        {productReadyToPublish({
+          name: values.name,
+          sku: values.sku,
+          price: Number(values.price),
+          imageCount,
+        }) && !isLive ? (
+          <p className="mt-3 text-xs font-medium text-success">
+            Ready to go live — upload is complete; use Save &amp; publish or add another photo to publish
+            automatically.
+          </p>
+        ) : null}
       </div>
+      ) : null}
 
       <div className="grid gap-4 rounded-lg border border-line bg-white p-5 shadow-sm sm:grid-cols-2">
         <div className="sm:col-span-2">
@@ -364,7 +400,7 @@ export function ProductForm({
           onClick={() => save("PUBLISHED")}
           className="h-10 rounded bg-accent px-5 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-60"
         >
-          {pending ? "Publishing…" : isLive ? "Save & keep live" : "Save & publish (go live)"}
+          {pending ? "Publishing…" : isLive ? "Save & keep live" : imageCount < 1 ? "Save & publish (needs photo)" : "Save & publish (go live)"}
         </button>
         {isEdit && isLive ? (
           <button

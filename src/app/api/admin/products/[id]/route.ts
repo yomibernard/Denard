@@ -7,6 +7,7 @@ import {
   syncProductCollections,
   syncProductVariants,
 } from "@/lib/product-admin";
+import { productImageCount } from "@/lib/product-publish-server";
 import type { AvailabilityStatus, ProductStatus } from "@/generated/prisma/client";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -50,6 +51,22 @@ export async function PATCH(request: Request, ctx: Ctx) {
     const slug =
       body.slug != null ? String(body.slug).trim() || slugify(name) : existing.slug;
     const price = body.price != null ? Number(body.price) : existing.price;
+
+    const nextStatus =
+      body.status != null ? (body.status as ProductStatus) : existing.status;
+    if (nextStatus === "PUBLISHED") {
+      const images = await productImageCount(id);
+      if (images < 1) {
+        return jsonError("Upload at least one product photo before publishing.");
+      }
+      const sku = body.sku != null ? String(body.sku).trim() : existing.sku;
+      if (!name || !sku) {
+        return jsonError("Name and SKU are required before publishing.");
+      }
+      if (Number.isNaN(price)) {
+        return jsonError("Valid price is required before publishing.");
+      }
+    }
 
     const product = await prisma.product.update({
       where: { id },

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { ImagePlus, Link2, Star, Trash2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,12 +19,17 @@ export function ProductImageManager({
   productName,
   initialImages,
   isPublished = false,
+  onImagesChange,
+  autoPublishWhenReady = false,
 }: {
   productId: string;
   productName: string;
   initialImages: AdminProductImage[];
   isPublished?: boolean;
+  onImagesChange?: (images: AdminProductImage[], autoPublished?: boolean) => void;
+  autoPublishWhenReady?: boolean;
 }) {
+  const router = useRouter();
   const [images, setImages] = useState(initialImages);
   const [error, setError] = useState<string | null>(null);
   const [urlInput, setUrlInput] = useState("");
@@ -31,9 +37,33 @@ export function ProductImageManager({
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const refreshFrom = useCallback((next: AdminProductImage[]) => {
-    setImages(next);
-  }, []);
+  const refreshFrom = useCallback(
+    (next: AdminProductImage[], autoPublished?: boolean) => {
+      setImages(next);
+      onImagesChange?.(next, autoPublished);
+    },
+    [onImagesChange],
+  );
+
+  async function maybeAutoPublish(nextImages: AdminProductImage[]) {
+    if (!autoPublishWhenReady || isPublished || nextImages.length < 1) return false;
+    const res = await fetch(`/api/admin/products/${productId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "PUBLISHED", autoPublish: true }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.product?.status === "PUBLISHED") {
+      router.refresh();
+      return true;
+    }
+    return false;
+  }
+
+  async function finishUpload(nextImages: AdminProductImage[]) {
+    const autoPublished = await maybeAutoPublish(nextImages);
+    refreshFrom(nextImages, autoPublished);
+  }
 
   async function uploadFiles(files: FileList | File[]) {
     const list = Array.from(files);
@@ -55,7 +85,10 @@ export function ProductImageManager({
       // Reload full list
       const listRes = await fetch(`/api/admin/products/${productId}/images`);
       const listData = await listRes.json();
-      if (listRes.ok) refreshFrom(listData.images ?? []);
+      if (listRes.ok) {
+        const next = listData.images ?? [];
+        await finishUpload(next);
+      }
     });
   }
 
@@ -77,7 +110,10 @@ export function ProductImageManager({
       setUrlInput("");
       const listRes = await fetch(`/api/admin/products/${productId}/images`);
       const listData = await listRes.json();
-      if (listRes.ok) refreshFrom(listData.images ?? []);
+      if (listRes.ok) {
+        const next = listData.images ?? [];
+        await finishUpload(next);
+      }
     });
   }
 

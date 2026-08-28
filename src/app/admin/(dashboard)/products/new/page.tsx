@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { ProductForm } from "@/components/admin/product-form";
+import { ProductEditor } from "@/components/admin/product-editor";
 import { requireAdminPage } from "@/lib/admin-page";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +15,8 @@ export default async function NewProductPage() {
     prisma.collection.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
   ]);
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim() || undefined;
+
   return (
     <div className="space-y-5">
       <div>
@@ -23,16 +25,22 @@ export default async function NewProductPage() {
         </Link>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight">New product</h1>
         <p className="mt-1 text-sm text-muted">
-          Fill in details, then use <strong>Save &amp; publish</strong> to go live, or save as draft
-          first and upload photos on the next screen.
+          Add product details, upload a photo, and the shop publishes automatically when everything
+          is ready — no developer needed.
         </p>
       </div>
-      <ProductForm
+      <ProductEditor
+        mode="create"
+        productName=""
+        productSlug=""
+        initialStatus="DRAFT"
+        initialImages={[]}
+        siteUrl={siteUrl}
         departments={departments}
         brands={brands}
         categories={categories}
         collections={collections}
-        initial={{
+        formInitial={{
           name: "",
           slug: "",
           sku: "",

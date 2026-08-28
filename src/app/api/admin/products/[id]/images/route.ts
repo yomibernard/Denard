@@ -2,6 +2,7 @@ import path from "node:path";
 import { prisma } from "@/lib/db";
 import { isSession, jsonError, jsonOk, requireAdmin } from "@/lib/admin-api";
 import { deleteStoredUpload, storeProductImage } from "@/lib/media";
+import { autoPublishProductIfReady } from "@/lib/product-publish-server";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -61,6 +62,7 @@ export async function POST(request: Request, ctx: Ctx) {
           isPrimary: count === 0,
         },
       });
+      await autoPublishProductIfReady(productId);
       return jsonOk({ image }, { status: 201 });
     }
 
@@ -107,6 +109,7 @@ export async function POST(request: Request, ctx: Ctx) {
       count += 1;
     }
 
+    await autoPublishProductIfReady(productId);
     return jsonOk({ images: created }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Upload failed";

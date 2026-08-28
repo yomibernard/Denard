@@ -69,6 +69,11 @@ export async function POST(request: Request) {
     const price = Number(body.price);
     if (Number.isNaN(price)) return jsonError("Valid price required");
 
+    const status = (body.status as ProductStatus) || "DRAFT";
+    if (status === "PUBLISHED") {
+      return jsonError("Save as draft first, upload a photo, then publish.");
+    }
+
     const product = await prisma.product.create({
       data: {
         name,
@@ -85,7 +90,7 @@ export async function POST(request: Request) {
         sizeGuide: body.sizeGuide ? String(body.sizeGuide) : null,
         seoTitle: body.metaTitle ? String(body.metaTitle) : null,
         seoDescription: body.metaDescription ? String(body.metaDescription) : null,
-        status: (body.status as ProductStatus) || "DRAFT",
+        status,
         availability: (body.availability as AvailabilityStatus) || "IN_STOCK",
         stockQty: body.stockQty != null && body.stockQty !== "" ? Number(body.stockQty) : null,
         isNew: Boolean(body.isNew),
@@ -94,7 +99,7 @@ export async function POST(request: Request) {
         isOnOffer: Boolean(body.isOnOffer),
         departmentId: body.departmentId || null,
         brandId: body.brandId || null,
-        publishedAt: body.status === "PUBLISHED" ? new Date() : null,
+        publishedAt: null,
       },
     });
 

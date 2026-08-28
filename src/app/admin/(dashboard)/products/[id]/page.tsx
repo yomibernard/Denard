@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { ProductForm } from "@/components/admin/product-form";
-import { ProductImageManager } from "@/components/admin/product-image-manager";
-import { WaitlistNotifyButton } from "@/components/admin/waitlist-notify-button";
+import { ProductEditor } from "@/components/admin/product-editor";
 import { formatVariantsText } from "@/lib/product-admin";
 import { requireAdminPage } from "@/lib/admin-page";
 
@@ -42,6 +40,8 @@ export default async function EditProductPage({ params }: Props) {
   ]);
   if (!product) notFound();
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim() || undefined;
+
   return (
     <div className="space-y-5">
       <div>
@@ -63,22 +63,20 @@ export default async function EditProductPage({ params }: Props) {
         </p>
       </div>
 
-      <ProductImageManager
+      <ProductEditor
+        mode="edit"
         productId={product.id}
         productName={product.name}
+        productSlug={product.slug}
+        initialStatus={product.status}
         initialImages={images}
-        isPublished={product.status === "PUBLISHED"}
-      />
-
-      <WaitlistNotifyButton productId={product.id} pendingCount={waitlistPending} />
-
-      <ProductForm
+        waitlistPending={waitlistPending}
+        siteUrl={siteUrl}
         departments={departments}
         brands={brands}
         categories={categories}
         collections={collections}
-        imageCount={images.length}
-        initial={{
+        formInitial={{
           id: product.id,
           name: product.name,
           slug: product.slug,
