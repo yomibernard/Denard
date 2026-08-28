@@ -70,7 +70,7 @@ export default async function HomePage() {
   const sectionOn = (key: string) => sections.find((s) => s.key === key)?.active !== false;
 
   const [newArrivals, bestSellers, offers, recommended] = await Promise.all([
-    listProducts({ isNew: true, pageSize: 8, sort: "newest" }),
+    listProducts({ pageSize: 8, sort: "newest" }),
     listProducts({ isBestSeller: true, pageSize: 8, sort: "popular" }),
     listProducts({ isOnOffer: true, pageSize: 8, sort: "discount" }),
     listProducts({ isFeatured: true, pageSize: 8 }),

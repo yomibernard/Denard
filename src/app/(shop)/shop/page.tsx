@@ -18,7 +18,7 @@ type Props = {
 
 export default async function ShopPage({ searchParams }: Props) {
   const sp = await searchParams;
-  const params = parseProductListParams(sp);
+  const params = parseProductListParams(sp, { sort: "newest" });
   const result = await listProducts(params);
 
   return (

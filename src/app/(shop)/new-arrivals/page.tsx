@@ -18,13 +18,13 @@ type Props = {
 
 export default async function NewArrivalsPage({ searchParams }: Props) {
   const sp = await searchParams;
-  const params = parseProductListParams(sp, { isNew: true, sort: sp.sort ? undefined : "newest" });
+  const params = parseProductListParams(sp, { sort: sp.sort ? undefined : "newest" });
   const result = await listProducts(params);
 
   return (
     <ProductListing
       title="New arrivals"
-      description="Fresh pieces just added to the catalogue."
+      description="Fresh pieces just added to the catalogue — newest first."
       breadcrumbs={[{ label: "Home", href: "/" }, { label: "New arrivals" }]}
       products={result.items}
       total={result.total}
@@ -32,7 +32,6 @@ export default async function NewArrivalsPage({ searchParams }: Props) {
       totalPages={result.totalPages}
       pathname="/new-arrivals"
       searchParams={sp}
-      lockedFlags={["isNew"]}
     />
   );
 }

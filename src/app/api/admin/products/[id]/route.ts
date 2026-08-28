@@ -8,6 +8,7 @@ import {
   syncProductVariants,
 } from "@/lib/product-admin";
 import { productImageCount } from "@/lib/product-publish-server";
+import { tagProductWithJewelleryCategories } from "@/lib/jewellery-taxonomy";
 import type { AvailabilityStatus, ProductStatus } from "@/generated/prisma/client";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -146,6 +147,13 @@ export async function PATCH(request: Request, ctx: Ctx) {
     }
     if (typeof body.variantsText === "string") {
       await syncProductVariants(id, parseVariantsText(body.variantsText), price);
+    }
+
+    if (nextStatus === "PUBLISHED") {
+      if (!existing.publishedAt && !existing.isNew) {
+        await prisma.product.update({ where: { id }, data: { isNew: true } });
+      }
+      await tagProductWithJewelleryCategories(id);
     }
 
     const full = await prisma.product.findUnique({

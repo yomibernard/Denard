@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { productReadyToPublish } from "@/lib/product-publish";
+import { tagProductWithJewelleryCategories } from "@/lib/jewellery-taxonomy";
 
 /** Publish a draft product when name, SKU, price and at least one image are set. */
 export async function autoPublishProductIfReady(productId: string) {
@@ -20,13 +21,17 @@ export async function autoPublishProductIfReady(productId: string) {
     return product;
   }
 
-  return prisma.product.update({
+  const updated = await prisma.product.update({
     where: { id: productId },
     data: {
       status: "PUBLISHED",
       publishedAt: product.publishedAt ?? new Date(),
+      isNew: true,
     },
   });
+
+  await tagProductWithJewelleryCategories(productId);
+  return updated;
 }
 
 export async function productImageCount(productId: string) {
