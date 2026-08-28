@@ -49,11 +49,15 @@ export function checkEnv(opts?: { requireS3?: boolean }): EnvCheck {
       process.env.S3_SECRET_ACCESS_KEY &&
       (process.env.S3_PUBLIC_BASE_URL || process.env.S3_ENDPOINT),
   );
-  if (opts?.requireS3 || (isProd && !s3Ready)) {
+  if (opts?.requireS3 || (isProd && process.env.ALLOW_LOCAL_MEDIA !== "true")) {
     if (!s3Ready) {
-      (isProd ? warnings : warnings).push(
-        "S3/R2 media is not configured — uploads will use ephemeral local disk",
-      );
+      if (isProd) {
+        errors.push(
+          "S3/R2 media is required in production (set S3_BUCKET, keys, and S3_PUBLIC_BASE_URL). Set ALLOW_LOCAL_MEDIA=true only for emergency.",
+        );
+      } else {
+        warnings.push("S3/R2 media is not configured — uploads will use local public/uploads");
+      }
     }
   }
 

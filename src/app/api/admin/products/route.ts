@@ -8,6 +8,8 @@ import {
   syncProductVariants,
 } from "@/lib/product-admin";
 import type { AvailabilityStatus, ProductStatus } from "@/generated/prisma/client";
+import { revalidateShopCatalogue } from "@/lib/revalidate-shop";
+import { writeAudit } from "@/lib/audit";
 
 function asIdList(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -116,6 +118,15 @@ export async function POST(request: Request) {
         collections: true,
         variants: true,
       },
+    });
+
+    revalidateShopCatalogue({ productSlug: full?.slug });
+    await writeAudit({
+      action: "product.create",
+      entityType: "Product",
+      entityId: product.id,
+      userId: session.id,
+      details: { slug: full?.slug, sku: full?.sku },
     });
 
     return jsonOk({ product: full }, { status: 201 });

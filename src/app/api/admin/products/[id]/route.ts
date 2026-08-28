@@ -9,6 +9,8 @@ import {
 } from "@/lib/product-admin";
 import { productImageCount } from "@/lib/product-publish-server";
 import { tagProductWithJewelleryCategories } from "@/lib/jewellery-taxonomy";
+import { revalidateShopCatalogue } from "@/lib/revalidate-shop";
+import { writeAudit } from "@/lib/audit";
 import type { AvailabilityStatus, ProductStatus } from "@/generated/prisma/client";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -165,6 +167,15 @@ export async function PATCH(request: Request, ctx: Ctx) {
       },
     });
 
+    revalidateShopCatalogue({ productSlug: full?.slug ?? product.slug });
+    await writeAudit({
+      action: "product.update",
+      entityType: "Product",
+      entityId: id,
+      userId: session.id,
+      details: { status: full?.status, slug: full?.slug },
+    });
+
     return jsonOk({ product: full });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Update failed";
@@ -184,6 +195,14 @@ export async function DELETE(_request: Request, ctx: Ctx) {
   const product = await prisma.product.update({
     where: { id },
     data: { status: "ARCHIVED" },
+  });
+  revalidateShopCatalogue({ productSlug: product.slug });
+  await writeAudit({
+    action: "product.archive",
+    entityType: "Product",
+    entityId: id,
+    userId: session.id,
+    details: { slug: product.slug },
   });
   return jsonOk({ product });
 }

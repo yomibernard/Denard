@@ -75,3 +75,33 @@ Create staff under **Admin → Users**. Never share the owner password.
 - Image uploads fail after go-live (usually S3/R2 credentials)
 - Need a new production domain or SSL
 - Want online card checkout (Phase 3 — not on by default)
+
+## Training click-paths (no developer needed)
+
+### Publish a new jewellery product
+1. Admin → **Products → New product**
+2. Fill name, SKU, price, short description → **Create as draft**
+3. Upload at least one photo (drag & drop)
+4. Tick **Jewellery** (and Women if relevant) under Categories
+5. When name + SKU + price + photo are ready, the product **goes live automatically**
+6. Open **View on shop** from the review panel and confirm the photo loads
+
+### Fix a product that is live but missing from Jewellery
+1. Admin → Products → open the product
+2. Under Categories, tick **Jewellery** → Save
+3. Hard-refresh `/category/jewellery` on your phone
+
+### Handle a privacy (GDPR) request
+1. Admin → **Privacy**
+2. Open the request, set status to **IN PROGRESS**, then **DONE** when fulfilled
+3. Keep notes in the request details / your solicitor file
+
+### Moderate a customer review
+1. Admin → **Reviews**
+2. Approve or reject new submissions
+3. Approved reviews appear on the product page
+
+### Export enquiries for your records
+1. Admin → **Enquiries → Export CSV**
+2. Store the file securely (contains customer phone numbers)
+

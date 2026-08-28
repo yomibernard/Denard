@@ -47,6 +47,7 @@ const schema = z.object({
   pageSource: z.string().max(500).optional(),
   /** Force multi-product message template (used by enquiry bag, even for one item). */
   messageFormat: z.enum(["single", "multi", "auto"]).optional().default("auto"),
+  turnstileToken: z.string().optional(),
   items: z.array(itemSchema).min(1).max(50),
 });
 
@@ -85,6 +86,15 @@ export async function POST(request: Request) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid enquiry", details: parsed.error.flatten() },
+        { status: 400 },
+      );
+    }
+
+    const { verifyTurnstile } = await import("@/lib/captcha");
+    const captcha = await verifyTurnstile(parsed.data.turnstileToken, clientIp(request));
+    if (!captcha.ok) {
+      return NextResponse.json(
+        { error: captcha.error ?? "Verification required" },
         { status: 400 },
       );
     }

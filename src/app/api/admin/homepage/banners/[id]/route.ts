@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { isSession, jsonError, jsonOk, requireAdmin } from "@/lib/admin-api";
+import { revalidateShopContent } from "@/lib/revalidate-shop";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
         active: body.active != null ? Boolean(body.active) : undefined,
       },
     });
+    revalidateShopContent();
     return jsonOk({ banner });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Update failed";

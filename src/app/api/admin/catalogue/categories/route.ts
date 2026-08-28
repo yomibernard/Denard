@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { isSession, jsonError, jsonOk, requireAdmin } from "@/lib/admin-api";
 import { slugify } from "@/lib/utils";
+import { revalidateShopTaxonomy } from "@/lib/revalidate-shop";
 
 export async function POST(request: Request) {
   const session = await requireAdmin("catalogue");
@@ -24,6 +25,7 @@ export async function POST(request: Request) {
         featured: Boolean(body.featured),
       },
     });
+    revalidateShopTaxonomy();
     return jsonOk({ category }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Create failed";
@@ -59,6 +61,7 @@ export async function PATCH(request: Request) {
         featured: body.featured != null ? Boolean(body.featured) : undefined,
       },
     });
+    revalidateShopTaxonomy();
     return jsonOk({ category });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Update failed";

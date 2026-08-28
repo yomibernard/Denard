@@ -1,92 +1,59 @@
 # Denard product documentation
 
-## 1. Assumptions & clarifications
+## 1. Product model
 
-| ID | Assumption | Impact |
+| ID | Assumption | Status |
 |----|------------|--------|
-| A1 | Phase 1 has no online payments | WhatsApp enquiry is the conversion path |
-| A2 | SQLite for local/dev; PostgreSQL for production | Change `provider` + `DATABASE_URL` + adapter |
-| A3 | WhatsApp phone configured via env + admin settings | Never hard-coded in UI components |
-| A4 | Catalogue navigation is DB-driven | Departments/categories not duplicated in nav constants |
-| A5 | Placeholder SVG imagery for demo | Replace with CDN/product photography |
-| A6 | Testimonials are service stories, not fabricated product reviews | Reviews feature reserved for later |
-| A7 | Multi-currency / i18n deferred | Schema has `currency` field for extension |
+| A1 | Phase 1 has no on-site card checkout | Active — WhatsApp enquiry is the conversion path; optional Stripe payment links from admin |
+| A2 | PostgreSQL only | Active — SQLite is not supported |
+| A3 | WhatsApp via env + Admin → Settings | Active |
+| A4 | Catalogue navigation is DB-driven | Active |
+| A5 | Live jewellery uses real photos (R2/CDN) | Active — avoid SVG placeholders for published jewellery |
+| A6 | Moderated product reviews on PDPs | Active |
+| A7 | Multi-currency / i18n deferred | Schema has `currency` for later |
 
 ## 2. Architecture
 
 ```
-Browser → Next.js App Router
-  ├─ (shop) storefront SSR/CSR
-  ├─ admin portal (JWT cookie session)
+Browser → Next.js App Router (Vercel)
+  ├─ (shop) storefront
+  ├─ admin portal (JWT cookie, ~8h session)
   └─ API routes (/api/enquiries, /api/search, /api/admin/*)
          ↓
-     Prisma ORM → SQLite / PostgreSQL
+     Prisma ORM → Neon PostgreSQL
+         ↓
+     Cloudflare R2 (product media)
 ```
 
-Extension path for payments: introduce `Order` model linked from `Enquiry`, add payment provider module, reuse basket → cart mapping without rebuilding catalogue UI.
+Operating guides: `docs/OWNER.md` (business), `docs/PRODUCTION.md` (hosting).
 
-## 3. Data model (summary)
+## 3. Security
 
-Department → Category (tree) → Product → Variant (colour/size)  
-Collection, Brand, Material, Tag as facets  
-Enquiry + EnquiryItem with frozen price snapshot  
-User + AuditLog + AnalyticsEvent + SiteSetting + HomepageSection + Banner
-
-## 4. Security plan
-
-- Admin passwords bcrypt (cost 12)
-- HTTP-only JWT cookies, 7-day expiry
+- Admin passwords bcrypt; login lockout after failed attempts
+- HTTP-only JWT cookies (~8 hours)
 - Role-based nav + API checks via `ROLE_PERMISSIONS`
-- No payment card collection in phase 1
-- Env secrets never committed (`.env` gitignored)
-- Audit log for admin mutations (extend as needed)
+- Rate limits on public forms; optional Cloudflare Turnstile
+- Security headers + CSP on responses
+- Privacy request workflow in Admin → Privacy
+- Audit log for key mutations
 
-## 5. SEO plan
+## 4. Launch checklist (owner + developer)
 
-- Metadata API on layouts/pages
-- `robots.ts`, `sitemap.ts`
-- Clean URLs: `/department/[slug]`, `/category/[slug]`, `/collection/[slug]`, `/product/[slug]`
-- Product/organisation schema ready to extend on PDP
-- Editable SEO fields on products/categories in admin
+- [x] Production `AUTH_SECRET`, WhatsApp number, `NEXT_PUBLIC_SITE_URL=https://denard.co.uk`
+- [x] Managed PostgreSQL (Neon) + migrations
+- [x] Durable media (Cloudflare R2) with correct `S3_PUBLIC_BASE_URL` (include `/denard-media` on r2.dev hosts)
+- [x] HTTPS + security headers
+- [x] Owner runbook (`docs/OWNER.md`)
+- [ ] Change default admin password after first login
+- [ ] Confirm `S3_PUBLIC_BASE_URL` includes bucket path on Vercel
+- [ ] Optional: custom media hostname `media.denard.co.uk`
+- [ ] Optional: Stripe webhook for card payment links
+- [ ] Smoke test: publish product → photo → shop → WhatsApp enquiry → admin status
 
-## 6. Analytics plan
-
-Client `trackEvent()` → `POST /api/analytics` plus optional GA/Meta hooks.  
-Events: product_view, search, add_to_enquiry, whatsapp_redirect, filter_use, etc.
-
-## 7. Test strategy
-
-- Smoke: homepage → shop → PDP → enquiry → WhatsApp URL
-- Admin: login, create product, update enquiry status
-- Mobile: filter drawer, sticky PDP actions, FAB not covering CTAs
-- A11y: skip link, focus rings, contrast on accent green
-- Perf: image SVGs/local, dynamic pages, Core Web Vitals after photo CDN
-
-## 8. Launch checklist
-
-- [ ] Set production `AUTH_SECRET`, WhatsApp number, `NEXT_PUBLIC_SITE_URL`
-- [ ] Migrate to managed PostgreSQL + backups
-- [ ] Replace placeholder imagery
-- [ ] Configure CDN / image host
-- [ ] Enable HTTPS and security headers
-- [ ] Seed real catalogue via CSV import (phase 1.1)
-- [ ] Staff training on enquiry statuses
-- [ ] Verify WhatsApp Business number and greeting message
-- [ ] Privacy/cookie notice for target markets
-- [ ] Smoke test on low-end Android + iPhone + desktop
-
-## 9. Future roadmap
+## 5. Roadmap
 
 | Phase | Scope |
 |-------|--------|
-| 1.1 | CSV import/export polish, richer admin merchandising |
-| 2 | Customer accounts, saved addresses |
-| 3 | Online payments + full checkout (cart maps from enquiry basket) |
-| 4 | Delivery integrations + tracking |
-| 5 | Reviews, loyalty, multi-currency/language |
-| 6 | WhatsApp Business API automation |
-| 7 | Native mobile app / marketplace sellers |
-
-## 10. Competitor benchmarks (principles only)
-
-Zara (merchandising clarity), ASOS (filters), Apple (hierarchy), Amazon (search/info), IKEA (taxonomy), Sephora (variants), Shopify (ops), WhatsApp Business (conversational commerce).
+| 1 | WhatsApp catalogue + enquiry (current) |
+| 2 | Deeper merchandising, analytics, CRM exports |
+| 3 | Optional on-site checkout if desired later |

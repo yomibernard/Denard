@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { isSession, jsonError, jsonOk, requireAdmin } from "@/lib/admin-api";
 import { deleteStoredUpload, storeProductImage } from "@/lib/media";
 import { autoPublishProductIfReady } from "@/lib/product-publish-server";
+import { revalidateShopCatalogue } from "@/lib/revalidate-shop";
+import { writeAudit } from "@/lib/audit";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -63,6 +65,14 @@ export async function POST(request: Request, ctx: Ctx) {
         },
       });
       await autoPublishProductIfReady(productId);
+      revalidateShopCatalogue({ productSlug: product.slug });
+      await writeAudit({
+        action: "product.image.add",
+        entityType: "ProductImage",
+        entityId: image.id,
+        userId: session.id,
+        details: { productId, url: image.url },
+      });
       return jsonOk({ image }, { status: 201 });
     }
 
@@ -110,6 +120,14 @@ export async function POST(request: Request, ctx: Ctx) {
     }
 
     await autoPublishProductIfReady(productId);
+    revalidateShopCatalogue({ productSlug: product.slug });
+    await writeAudit({
+      action: "product.image.upload",
+      entityType: "Product",
+      entityId: productId,
+      userId: session.id,
+      details: { count: created.length },
+    });
     return jsonOk({ images: created }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Upload failed";

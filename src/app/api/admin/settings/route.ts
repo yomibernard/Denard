@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db";
 import { isSession, jsonError, jsonOk, requireAdmin } from "@/lib/admin-api";
+import { revalidateShopContent } from "@/lib/revalidate-shop";
+import { writeAudit } from "@/lib/audit";
 
 export async function PATCH(request: Request) {
   const session = await requireAdmin("settings", ["SUPER_ADMIN", "BUSINESS_OWNER"]);
@@ -27,6 +29,13 @@ export async function PATCH(request: Request) {
     );
 
     const all = await prisma.siteSetting.findMany({ orderBy: { key: "asc" } });
+    revalidateShopContent();
+    await writeAudit({
+      action: "settings.update",
+      entityType: "SiteSetting",
+      userId: session.id,
+      details: { keys: entries.map(([k]) => k) },
+    });
     return jsonOk({ settings: all });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Update failed";
