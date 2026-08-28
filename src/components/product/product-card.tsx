@@ -8,7 +8,7 @@ import { buttonClassName } from "@/components/ui/button";
 import { cn, discountPercent, formatPrice } from "@/lib/utils";
 import { useCompare, useEnquiryBasket, useWishlist } from "@/store/commerce";
 import { trackEvent } from "@/lib/analytics";
-import { shopImageProps } from "@/lib/shop-image";
+import { shopImageProps, resolveShopImageSrc } from "@/lib/shop-image";
 import { useState } from "react";
 
 export type ProductCardColour = {
@@ -151,7 +151,7 @@ export function ProductCard({ product, className, priority }: ProductCardProps) 
           {primary ? (
             <>
               <Image
-                src={primary.url}
+                src={resolveShopImageSrc(primary.url)}
                 alt={primary.alt || product.name}
                 fill
                 sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -161,7 +161,7 @@ export function ProductCard({ product, className, priority }: ProductCardProps) 
                   "object-cover object-center transition-opacity duration-500",
                   secondary && "group-hover:opacity-0",
                 )}
-                {...(!primary.url.startsWith("http")
+                {...(!resolveShopImageSrc(primary.url).startsWith("http")
                   ? {
                       placeholder: "blur" as const,
                       blurDataURL:
@@ -171,7 +171,7 @@ export function ProductCard({ product, className, priority }: ProductCardProps) 
               />
               {secondary ? (
                 <Image
-                  src={secondary.url}
+                  src={resolveShopImageSrc(secondary.url)}
                   alt={secondary.alt || `${product.name} alternate`}
                   fill
                   sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"

@@ -61,6 +61,8 @@ S3_FORCE_PATH_STYLE="true"
 S3_ACCESS_KEY_ID="..."
 S3_SECRET_ACCESS_KEY="..."
 S3_PUBLIC_BASE_URL="https://media.denard.co.uk"
+# If using the Cloudflare R2 *.r2.dev public host (not a custom domain), include the bucket:
+# S3_PUBLIC_BASE_URL="https://pub-<id>.r2.dev/denard-media"
 ```
 
 ### Optional Stripe card payments

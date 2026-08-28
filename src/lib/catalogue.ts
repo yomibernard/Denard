@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import type { Prisma, ProductStatus } from "@/generated/prisma/client";
+import { normalizePublicMediaUrl } from "@/lib/media-url";
 
 export async function getActiveDepartments() {
   return prisma.department.findMany({
@@ -54,6 +55,17 @@ const productCardInclude = {
   },
   categories: { include: { category: true } },
 } satisfies Prisma.ProductInclude;
+
+function withFixedImageUrls<T extends { images?: Array<{ url: string }> | null }>(product: T): T {
+  if (!product.images?.length) return product;
+  return {
+    ...product,
+    images: product.images.map((img) => ({
+      ...img,
+      url: normalizePublicMediaUrl(img.url),
+    })),
+  };
+}
 
 export async function listProducts(params: ProductListParams = {}) {
   const page = Math.max(1, params.page ?? 1);
@@ -149,7 +161,7 @@ export async function listProducts(params: ProductListParams = {}) {
   ]);
 
   return {
-    items,
+    items: items.map(withFixedImageUrls),
     total,
     page,
     pageSize,
@@ -158,7 +170,7 @@ export async function listProducts(params: ProductListParams = {}) {
 }
 
 export async function getProductBySlug(slug: string) {
-  return prisma.product.findFirst({
+  const product = await prisma.product.findFirst({
     where: { slug, status: "PUBLISHED" },
     include: {
       images: { orderBy: { sortOrder: "asc" } },
@@ -192,6 +204,15 @@ export async function getProductBySlug(slug: string) {
       },
     },
   });
+  if (!product) return null;
+
+  return {
+    ...withFixedImageUrls(product),
+    relatedFrom: product.relatedFrom.map((rel) => ({
+      ...rel,
+      toProduct: withFixedImageUrls(rel.toProduct),
+    })),
+  };
 }
 
 export async function searchSuggestions(q: string) {
@@ -217,7 +238,7 @@ export async function searchSuggestions(q: string) {
     }),
   ]);
 
-  return { products, categories };
+  return { products: products.map(withFixedImageUrls), categories };
 }
 
 export async function getSiteSetting(key: string, fallback = "") {

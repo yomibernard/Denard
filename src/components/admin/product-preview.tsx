@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { formatPrice } from "@/lib/utils";
 import { productReadyToPublish } from "@/lib/product-publish";
+import { normalizePublicMediaUrl } from "@/lib/media-url";
 
 export type ProductPreviewData = {
   name: string;
@@ -59,12 +60,12 @@ export function ProductPreview({ product, siteUrl }: { product: ProductPreviewDa
         <div className="relative aspect-[3/4] overflow-hidden bg-ivory">
           {product.imageUrl ? (
             <Image
-              src={product.imageUrl}
+              src={normalizePublicMediaUrl(product.imageUrl)}
               alt={product.name || "Product preview"}
               fill
               className="object-cover"
               sizes="140px"
-              unoptimized={product.imageUrl.startsWith("http")}
+              unoptimized={normalizePublicMediaUrl(product.imageUrl).startsWith("http")}
             />
           ) : (
             <div className="flex h-full items-center justify-center p-3 text-center text-xs text-muted">

@@ -5,6 +5,7 @@ import { useCallback, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ImagePlus, Link2, Star, Trash2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { normalizePublicMediaUrl } from "@/lib/media-url";
 
 export type AdminProductImage = {
   id: string;
@@ -283,12 +284,12 @@ export function ProductImageManager({
             >
               <div className="relative aspect-[3/4] bg-canvas">
                 <Image
-                  src={img.url}
+                  src={normalizePublicMediaUrl(img.url)}
                   alt={img.alt || productName}
                   fill
                   className="object-cover"
                   sizes="240px"
-                  unoptimized={img.url.startsWith("http")}
+                  unoptimized={normalizePublicMediaUrl(img.url).startsWith("http")}
                 />
                 {img.isPrimary ? (
                   <span className="absolute left-2 top-2 rounded bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">

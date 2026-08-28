@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile, unlink } from "node:fs/promises";
 import path from "node:path";
 import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { mediaBucketName, publicUrlForObjectKey } from "@/lib/media-url";
 
 export type StoredUpload = {
   url: string;
@@ -34,12 +35,7 @@ function getS3Client() {
 }
 
 function publicUrlForKey(key: string) {
-  const base = (process.env.S3_PUBLIC_BASE_URL || "").replace(/\/$/, "");
-  if (base) return `${base}/${key}`;
-  // Fallback path-style URL for MinIO-style endpoints
-  const endpoint = (process.env.S3_ENDPOINT || "").replace(/\/$/, "");
-  const bucket = process.env.S3_BUCKET!;
-  return `${endpoint}/${bucket}/${key}`;
+  return publicUrlForObjectKey(key);
 }
 
 /**
@@ -96,6 +92,10 @@ export async function deleteStoredUpload(url: string) {
   let key: string | null = null;
   if (base && url.startsWith(`${base}/`)) {
     key = url.slice(base.length + 1);
+  } else if (url.includes(`/${mediaBucketName()}/products/`)) {
+    const marker = `${mediaBucketName()}/products/`;
+    const idx = url.indexOf(marker);
+    key = url.slice(idx + mediaBucketName().length + 1);
   } else if (url.includes("/products/")) {
     const idx = url.indexOf("products/");
     key = url.slice(idx);

@@ -13,7 +13,7 @@ import {
   type WhatsAppEnquiryReady,
 } from "@/components/enquiry/whatsapp-enquiry-modal";
 import { trackEvent } from "@/lib/analytics";
-import { shopImageProps } from "@/lib/shop-image";
+import { shopImageProps, resolveShopImageSrc } from "@/lib/shop-image";
 import type { IntendedActionType } from "@/lib/whatsapp";
 import {
   cancelWhatsAppLaunch,
@@ -193,9 +193,10 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
   const variantLabel = selectedVariant?.name?.trim() || styleName || undefined;
   const productUrl = absoluteUrl(`/product/${product.slug}`);
   const imageUrl = product.images[0]?.url
-    ? product.images[0].url.startsWith("http")
-      ? product.images[0].url
-      : absoluteUrl(product.images[0].url)
+    ? (() => {
+        const src = resolveShopImageSrc(product.images[0].url);
+        return src.startsWith("http") ? src : absoluteUrl(src);
+      })()
     : undefined;
   const unavailable =
     product.availability === "OUT_OF_STOCK" ||
@@ -396,7 +397,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
             aria-label="Zoom product image"
           >
             <Image
-              src={images[activeImage]?.url ?? images[0].url}
+              src={resolveShopImageSrc(images[activeImage]?.url ?? images[0].url)}
               alt={images[activeImage]?.alt || product.name}
               fill
               priority
@@ -423,7 +424,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
                   aria-label={`View image ${i + 1}`}
                 >
                   <Image
-                    src={img.url}
+                    src={resolveShopImageSrc(img.url)}
                     alt={`${product.name} view ${i + 1}`}
                     fill
                     {...shopImageProps(img.url)}
@@ -488,7 +489,7 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
               style={{ transform: `scale(${zoomScale})` }}
             >
               <Image
-                src={images[activeImage]?.url ?? images[0].url}
+                src={resolveShopImageSrc(images[activeImage]?.url ?? images[0].url)}
                 alt={images[activeImage]?.alt || product.name}
                 fill
                 {...shopImageProps(images[activeImage]?.url ?? images[0].url)}
