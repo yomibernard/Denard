@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db";
 import { isSession, jsonError, jsonOk, requireAdmin } from "@/lib/admin-api";
+import { revalidateShopContent } from "@/lib/revalidate-shop";
+import { writeAudit } from "@/lib/audit";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +29,14 @@ export async function PATCH(request: Request, ctx: Ctx) {
         seoTitle: body.seoTitle ? String(body.seoTitle).trim() : null,
         seoDescription: body.seoDescription ? String(body.seoDescription).trim() : null,
       },
+    });
+    revalidateShopContent([page.slug]);
+    await writeAudit({
+      action: "content.update",
+      entityType: "PageContent",
+      entityId: page.id,
+      userId: session.id,
+      details: { slug: page.slug },
     });
     return jsonOk({ page });
   } catch (err) {
