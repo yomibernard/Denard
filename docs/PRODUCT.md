@@ -4,7 +4,7 @@
 
 | ID | Assumption | Status |
 |----|------------|--------|
-| A1 | Phase 1 has no on-site card checkout | Active — WhatsApp enquiry is the conversion path; optional Stripe payment links from admin |
+| A1 | Card checkout + WhatsApp | Active — customers can **Pay by card** from Your bag when Stripe is configured; WhatsApp remains an alternative. Staff payment links still work. |
 | A2 | PostgreSQL only | Active — SQLite is not supported |
 | A3 | WhatsApp via env + Admin → Settings | Active |
 | A4 | Catalogue navigation is DB-driven | Active |
@@ -16,9 +16,9 @@
 
 ```
 Browser → Next.js App Router (Vercel)
-  ├─ (shop) storefront
+  ├─ (shop) storefront + /api/checkout (Stripe)
   ├─ admin portal (JWT cookie, ~8h session)
-  └─ API routes (/api/enquiries, /api/search, /api/admin/*)
+  └─ API routes (/api/enquiries, /api/stripe/webhook, /api/admin/*)
          ↓
      Prisma ORM → Neon PostgreSQL
          ↓
@@ -36,6 +36,7 @@ Operating guides: `docs/OWNER.md` (business), `docs/PRODUCTION.md` (hosting).
 - Security headers + CSP on responses
 - Privacy request workflow in Admin → Privacy
 - Audit log for key mutations
+- Stripe Checkout hosted pages (card data never touches Denard servers)
 
 ## 4. Launch checklist (owner + developer)
 
@@ -44,16 +45,19 @@ Operating guides: `docs/OWNER.md` (business), `docs/PRODUCTION.md` (hosting).
 - [x] Durable media (Cloudflare R2) with correct `S3_PUBLIC_BASE_URL` (include `/denard-media` on r2.dev hosts)
 - [x] HTTPS + security headers
 - [x] Owner runbook (`docs/OWNER.md`)
+- [x] Phase 3 on-site card checkout (`/api/checkout`, bag **Pay by card**)
 - [ ] Change default admin password after first login
 - [ ] Confirm `S3_PUBLIC_BASE_URL` includes bucket path on Vercel
+- [ ] Set `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` and webhook URL for live card checkout
 - [ ] Optional: custom media hostname `media.denard.co.uk`
-- [ ] Optional: Stripe webhook for card payment links
-- [ ] Smoke test: publish product → photo → shop → WhatsApp enquiry → admin status
+- [ ] Smoke test: bag → Pay by card → success page → Admin enquiry paid
+- [ ] Smoke test: WhatsApp enquiry path still works
 
 ## 5. Roadmap
 
 | Phase | Scope |
 |-------|--------|
-| 1 | WhatsApp catalogue + enquiry (current) |
-| 2 | Deeper merchandising, analytics, CRM exports |
-| 3 | Optional on-site checkout if desired later |
+| 1 | WhatsApp catalogue + enquiry |
+| 2 | Merchandising, analytics, CRM exports |
+| 3 | On-site Stripe Checkout from bag (**shipped**) |
+| 4 | Optional: PDP buy-now, email receipts, richer fulfilment |

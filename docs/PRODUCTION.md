@@ -67,17 +67,24 @@ S3_PUBLIC_BASE_URL="https://media.denard.co.uk"
 
 ### Optional Stripe card payments
 
-When configured, staff can create a Stripe Checkout link from an enquiry and send it on WhatsApp. Payment confirmation updates the enquiry via webhook.
+When configured:
+
+1. **Shop checkout** — customers tap **Pay by card** on `/enquiry` (Your bag). Creates an enquiry + Stripe Checkout Session; success at `/checkout/success`.
+2. **Staff payment links** — Admin → Enquiry → Create payment link → send on WhatsApp.
+
+Payment confirmation updates the enquiry via webhook (`PAYMENT_CONFIRMED`).
 
 ```env
 STRIPE_SECRET_KEY="sk_live_..."
 STRIPE_WEBHOOK_SECRET="whsec_..."
+# Optional kill-switch for customer checkout only (admin links still work):
+# DISABLE_SHOP_CHECKOUT="true"
 ```
 
 Webhook URL: `https://denard.co.uk/api/stripe/webhook`  
 Subscribe to: `checkout.session.completed`, `checkout.session.expired`.
 
-Phase note: the storefront stays WhatsApp-first. Card checkout is staff-triggered per enquiry, not an on-site cart.
+Shop **Pay by card** appears only when `STRIPE_SECRET_KEY` is set and `DISABLE_SHOP_CHECKOUT` is not `true`.
 
 ## 3. Deploy checklist
 

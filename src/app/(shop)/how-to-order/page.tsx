@@ -14,9 +14,10 @@ export default function HowToOrderPage() {
       fallbackTitle="How to order"
       fallbackBody={`1. Browse the catalogue and open a product.
 2. Choose colour, size and quantity where required.
-3. Add items to your enquiry basket, or message us directly on WhatsApp (+44 7887 539426).
-4. Submit your details — we open WhatsApp with your enquiry reference.
-5. Confirm availability, payment (GBP) and UK delivery with our team.`}
+3. Add items to your bag (or enquire on a single product).
+4. Open Your bag and enter your details.
+5. Pay securely by card on the site (when card checkout is available), or send on WhatsApp (+44 7887 539426) for personal guidance.
+6. Keep your DEN- reference to track fulfilment. Delivery timing is confirmed after payment or in chat.`}
     />
   );
 }

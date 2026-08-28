@@ -26,7 +26,7 @@ export type EnquiryPaymentLine = {
 
 /**
  * Create a Stripe Checkout Session for an enquiry (GBP card payment).
- * Returns the hosted payment URL to send on WhatsApp.
+ * Returns the hosted payment URL (admin WhatsApp link or customer redirect).
  */
 export async function createEnquiryCheckoutSession(opts: {
   enquiryId: string;
@@ -37,9 +37,13 @@ export async function createEnquiryCheckoutSession(opts: {
   lines: EnquiryPaymentLine[];
   /** Optional delivery/surcharge in major units (e.g. pounds) */
   deliveryAmount?: number | null;
+  /** Customer-facing checkout uses dedicated success/cancel pages */
+  flow?: "admin" | "shop";
+  customerEmail?: string | null;
 }) {
   const stripe = getStripe();
   const currency = (opts.currency || "GBP").toLowerCase();
+  const flow = opts.flow ?? "admin";
 
   const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = opts.lines.map((line) => ({
     quantity: line.quantity,
@@ -64,20 +68,29 @@ export async function createEnquiryCheckoutSession(opts: {
     });
   }
 
+  const success_url =
+    flow === "shop"
+      ? absoluteUrl(
+          `/checkout/success?reference=${encodeURIComponent(opts.reference)}&session_id={CHECKOUT_SESSION_ID}`,
+        )
+      : absoluteUrl(`/track?reference=${encodeURIComponent(opts.reference)}&paid=1`);
+
+  const cancel_url =
+    flow === "shop"
+      ? absoluteUrl(`/enquiry?checkout=cancelled&reference=${encodeURIComponent(opts.reference)}`)
+      : absoluteUrl(`/track?reference=${encodeURIComponent(opts.reference)}&paid=0`);
+
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
     line_items,
-    success_url: absoluteUrl(
-      `/track?reference=${encodeURIComponent(opts.reference)}&paid=1`,
-    ),
-    cancel_url: absoluteUrl(
-      `/track?reference=${encodeURIComponent(opts.reference)}&paid=0`,
-    ),
+    success_url,
+    cancel_url,
     client_reference_id: opts.reference,
     metadata: {
       enquiryId: opts.enquiryId,
       enquiryReference: opts.reference,
       customerPhone: opts.customerPhone,
+      flow,
     },
     payment_intent_data: {
       metadata: {
@@ -86,7 +99,11 @@ export async function createEnquiryCheckoutSession(opts: {
       },
     },
     customer_creation: "if_required",
-    phone_number_collection: { enabled: false },
+    customer_email: opts.customerEmail || undefined,
+    phone_number_collection: { enabled: flow === "shop" },
+    shipping_address_collection:
+      flow === "shop" ? { allowed_countries: ["GB"] } : undefined,
+    billing_address_collection: flow === "shop" ? "auto" : undefined,
   });
 
   if (!session.url) {

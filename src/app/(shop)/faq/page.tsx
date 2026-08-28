@@ -5,13 +5,13 @@ import { faqPageJsonLd } from "@/lib/seo";
 export const revalidate = 3600;
 
 const FAQ_FALLBACK = `Q: Do you take online payments on the website?
-A: Not in this phase. After your enquiry, our team confirms availability and shares secure payment instructions on WhatsApp. We never ask for card details via the public site forms.
+A: Yes — when card checkout is enabled, you can pay securely by card from Your bag via Stripe. You can also send an enquiry on WhatsApp and pay later (including a payment link we send you). Never type card numbers into WhatsApp chat or public enquiry forms.
 
 Q: How does WhatsApp ordering work?
-A: Browse products, choose colour/size where needed, add items to your enquiry basket, then send. You receive a DEN-YEAR-###### reference so you can track the conversation.
+A: Browse products, choose colour/size where needed, add items to your bag, then Send on WhatsApp. You receive a DEN-YEAR-###### reference so you can track the conversation.
 
 Q: Are prices final?
-A: Displayed prices are a guide in GBP. Final totals may include delivery or stock changes confirmed with you before payment.
+A: Displayed prices are a guide in GBP. Delivery or stock changes may adjust the total — confirmed at card checkout or on WhatsApp before you pay offline.
 
 Q: Can I track my enquiry?
 A: Yes — use Track enquiry with your DEN-YEAR-###### reference and the phone number you submitted.`;
@@ -45,7 +45,7 @@ export default async function FaqPage() {
           {
             question: "Do you take online payments on the website?",
             answer:
-              "Not in this phase. Payment details are shared securely through WhatsApp after availability is confirmed.",
+              "Yes — pay by card from Your bag when checkout is available, or enquire on WhatsApp for a secure payment link.",
           },
         ],
   );

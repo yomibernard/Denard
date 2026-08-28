@@ -11,9 +11,9 @@ Short operating guide for the business owner. Technical setup lives in `docs/PRO
    - WhatsApp number (digits with country code, e.g. `447887539426`)
    - Business email (`hello@denard.co.uk`), phone, service hours, address
 5. Hit `https://denard.co.uk/api/health` — should show database up (ask your developer if unsure).
-6. On your phone, open a product on https://denard.co.uk → **Enquire on WhatsApp**.
-7. Confirm WhatsApp opens with a filled message and an **Enquiry Reference** like `DEN-2026-000001`.
-8. In **Admin → Enquiries**, open that reference, reply via **WhatsApp customer**, then update the status.
+6. On your phone, open a product on https://denard.co.uk → add to bag → **Your bag**.
+7. Confirm you can either **Pay by card** (if Stripe is live) or **Send on WhatsApp**, and that you get an **Enquiry Reference** like `DEN-2026-000001`.
+8. In **Admin → Enquiries**, open that reference, reply via **WhatsApp customer** if needed, then update the status.
 
 ## Daily ops
 
@@ -38,9 +38,20 @@ Short operating guide for the business owner. Technical setup lives in `docs/PRO
 7. Confirm backups ran (ask your host/developer if unsure — database + media).
 8. Review Privacy / Terms still match how you trade (update with your solicitor when needed).
 
-## Taking card payment (optional)
+## Taking card payment
 
-When Stripe is connected by your developer:
+### Customer pays on the website (Phase 3)
+
+When your developer has set Stripe keys on Vercel:
+
+1. Customer adds pieces to **Your bag**, enters name + phone, taps **Pay by card**.
+2. They complete Stripe Checkout (GBP) and land on the payment success page.
+3. Admin → Enquiries shows the reference as **Payment confirmed** (webhook or success-page reconcile).
+4. Message them on WhatsApp to arrange delivery / collection.
+
+To temporarily hide **Pay by card** without removing Stripe admin links, set `DISABLE_SHOP_CHECKOUT=true` on Vercel.
+
+### Staff sends a payment link (WhatsApp)
 
 1. Open the enquiry in Admin.
 2. Confirm availability and any delivery add-on amount.
@@ -74,7 +85,8 @@ Create staff under **Admin → Users**. Never share the owner password.
 - WhatsApp links open blank or to the wrong number
 - Image uploads fail after go-live (usually S3/R2 credentials)
 - Need a new production domain or SSL
-- Want online card checkout (Phase 3 — not on by default)
+- Card checkout missing on Your bag (usually Stripe keys / webhook not set)
+- Payments succeed in Stripe but enquiries stay unpaid (webhook secret / URL)
 
 ## Training click-paths (no developer needed)
 

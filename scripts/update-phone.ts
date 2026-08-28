@@ -38,16 +38,16 @@ Track progress with your DEN-YEAR-###### enquiry reference on the Track page.`,
     seoTitle: "FAQ | Denard WhatsApp shopping",
     seoDescription: "Payments, delivery, returns, sizing and tracking answers for Denard customers in the UK.",
     body: `Q: Do I pay on the website?
-A: Not in this phase. Secure payment instructions are shared on WhatsApp after availability is confirmed. We do not collect card details through site forms.
+A: Yes — when card checkout is enabled, pay securely by card from Your bag via Stripe. You can also enquire on WhatsApp and pay later (including a payment link we send). Never type card numbers into WhatsApp or public enquiry forms.
 
 Q: How fast will you respond?
 A: During service hours (Mon–Sat, 09:00–18:00 GMT) we typically respond within 30 minutes.
 
 Q: Can I order multiple products?
-A: Yes. Use the enquiry basket and send one combined WhatsApp request.
+A: Yes. Use Your bag and pay by card or send one combined WhatsApp request.
 
 Q: Are prices in pounds?
-A: Yes — GBP. Final totals including delivery are confirmed before you pay.
+A: Yes — GBP. Delivery may be confirmed separately if not included at checkout.
 
 Q: How do returns work?
 A: Eligible unused items can be returned or exchanged via WhatsApp with your enquiry reference. See our Returns page.
