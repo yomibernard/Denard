@@ -11,12 +11,15 @@
 | A5 | Live jewellery uses real photos (R2/CDN) | Active — avoid SVG placeholders for published jewellery |
 | A6 | Moderated product reviews on PDPs | Active |
 | A7 | Multi-currency / i18n deferred | Schema has `currency` for later |
+| A8 | Behavioural style personalization | Active — on-device taste prefs + browse/wishlist seeds → For you / Style Concierge; optional OpenAI polish |
 
 ## 2. Architecture
 
 ```
 Browser → Next.js App Router (Vercel)
-  ├─ (shop) storefront + /api/checkout (Stripe)
+  ├─ (shop) storefront + /style + Style Concierge
+  ├─ /api/recommendations, /api/style-concierge
+  ├─ /api/checkout (Stripe)
   ├─ admin portal (JWT cookie, ~8h session)
   └─ API routes (/api/enquiries, /api/stripe/webhook, /api/admin/*)
          ↓
@@ -37,6 +40,7 @@ Operating guides: `docs/OWNER.md` (business), `docs/PRODUCTION.md` (hosting).
 - Privacy request workflow in Admin → Privacy
 - Audit log for key mutations
 - Stripe Checkout hosted pages (card data never touches Denard servers)
+- Style preferences stored in the browser only (not a server customer profile)
 
 ## 4. Launch checklist (owner + developer)
 
@@ -46,12 +50,14 @@ Operating guides: `docs/OWNER.md` (business), `docs/PRODUCTION.md` (hosting).
 - [x] HTTPS + security headers
 - [x] Owner runbook (`docs/OWNER.md`)
 - [x] Phase 3 on-site card checkout (`/api/checkout`, bag **Pay by card**)
+- [x] Style Concierge + For you recommendations
 - [ ] Change default admin password after first login
 - [ ] Confirm `S3_PUBLIC_BASE_URL` includes bucket path on Vercel
 - [ ] Set `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` and webhook URL for live card checkout
+- [ ] Optional: `OPENAI_API_KEY` for richer style advice copy
 - [ ] Optional: custom media hostname `media.denard.co.uk`
 - [ ] Smoke test: bag → Pay by card → success page → Admin enquiry paid
-- [ ] Smoke test: WhatsApp enquiry path still works
+- [ ] Smoke test: set style prefs → For you rail → WhatsApp handoff
 
 ## 5. Roadmap
 
@@ -60,4 +66,5 @@ Operating guides: `docs/OWNER.md` (business), `docs/PRODUCTION.md` (hosting).
 | 1 | WhatsApp catalogue + enquiry |
 | 2 | Merchandising, analytics, CRM exports |
 | 3 | On-site Stripe Checkout from bag (**shipped**) |
-| 4 | Optional: PDP buy-now, email receipts, richer fulfilment |
+| 4 | Style Concierge + behaviour recommendations (**shipped**) |
+| 5 | Optional: logged-in taste profiles, email nurture, admin relation editor |

@@ -2,6 +2,10 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import {
+  DEFAULT_STYLE_PREFS,
+  type StylePrefs,
+} from "@/lib/style-prefs";
 
 export type EnquiryBasketItem = {
   key: string;
@@ -143,5 +147,35 @@ export const useCompare = create<CompareState>()(
       clear: () => set({ ids: [] }),
     }),
     { name: "denard-compare" },
+  ),
+);
+
+type StyleState = {
+  prefs: StylePrefs;
+  setPrefs: (prefs: StylePrefs) => void;
+  togglePref: (
+    key: keyof Pick<StylePrefs, "occasions" | "metals" | "vibes" | "focuses">,
+    id: string,
+  ) => void;
+  setBudgetMax: (budgetMax: number | null) => void;
+  reset: () => void;
+};
+
+export const useStylePrefs = create<StyleState>()(
+  persist(
+    (set, get) => ({
+      prefs: DEFAULT_STYLE_PREFS,
+      setPrefs: (prefs) => set({ prefs }),
+      togglePref: (key, id) => {
+        const current = get().prefs[key];
+        const next = current.includes(id)
+          ? current.filter((x) => x !== id)
+          : [...current, id];
+        set({ prefs: { ...get().prefs, [key]: next } });
+      },
+      setBudgetMax: (budgetMax) => set({ prefs: { ...get().prefs, budgetMax } }),
+      reset: () => set({ prefs: DEFAULT_STYLE_PREFS }),
+    }),
+    { name: "denard-style-prefs" },
   ),
 );

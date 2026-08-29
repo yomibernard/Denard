@@ -117,3 +117,10 @@ Create staff under **Admin → Users**. Never share the owner password.
 1. Admin → **Enquiries → Export CSV**
 2. Store the file securely (contains customer phone numbers)
 
+### Style Concierge (automated taste proposals)
+1. On the shop, use the sparkle button (above WhatsApp) or open **/style**
+2. Customers set metals / vibe / occasions / budget on their device
+3. Homepage and product pages show a **For you** rail from browse + wishlist + prefs
+4. **Continue on WhatsApp** sends their taste summary + proposed SKUs to you
+5. Optional: ask your developer to set `OPENAI_API_KEY` for richer written advice (matching still works without it)
+

@@ -6,6 +6,7 @@ import { ProductDetailClient } from "@/components/product/product-detail-client"
 import { ProductReviews } from "@/components/product/product-reviews";
 import { ProductGrid } from "@/components/product/product-grid";
 import { RecentlyViewedRail } from "@/components/product/recently-viewed-rail";
+import { ForYouRail } from "@/components/style/for-you-rail";
 import { getProductBySlug } from "@/lib/catalogue";
 import { prisma } from "@/lib/db";
 import { buildPageMetadata } from "@/lib/seo";
@@ -196,6 +197,7 @@ export default async function ProductPage({ params }: Props) {
       ) : null}
 
       <div className="mt-8">
+        <ForYouRail excludeId={product.id} title="Chosen for your taste" flush />
         <RecentlyViewedRail excludeId={product.id} flush />
       </div>
 

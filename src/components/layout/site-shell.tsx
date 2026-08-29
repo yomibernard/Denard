@@ -3,6 +3,7 @@
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { WhatsAppFab } from "@/components/layout/whatsapp-fab";
+import { StyleConcierge } from "@/components/style/style-concierge";
 
 type Dept = {
   id: string;
@@ -54,6 +55,7 @@ export function SiteShell({
         departments={departments}
       />
       <WhatsAppFab phone={whatsappPhone} />
+      <StyleConcierge phone={whatsappPhone} />
     </>
   );
 }

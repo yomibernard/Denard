@@ -44,11 +44,13 @@ const NAV_LINKS = [
   { href: "/shop?isNew=1", label: "New" },
   { href: "/shop?isBestSeller=1", label: "Best Sellers" },
   { href: "/shop?isOnOffer=1", label: "Offers" },
+  { href: "/style", label: "For you" },
   { href: "/how-to-order", label: "How to order" },
   { href: "/track", label: "Track" },
 ] as const;
 
 const HELP_LINKS = [
+  { href: "/style", label: "Style profile" },
   { href: "/how-to-order", label: "How to order" },
   { href: "/track", label: "Track enquiry" },
   { href: "/wishlist", label: "Wishlist" },

@@ -84,7 +84,17 @@ STRIPE_WEBHOOK_SECRET="whsec_..."
 Webhook URL: `https://denard.co.uk/api/stripe/webhook`  
 Subscribe to: `checkout.session.completed`, `checkout.session.expired`.
 
-Shop **Pay by card** appears only when `STRIPE_SECRET_KEY` is set and `DISABLE_SHOP_CHECKOUT` is not `true`.
+### Optional Style Concierge AI copy
+
+Catalogue matching works without an AI key. For richer written style advice:
+
+```env
+OPENAI_API_KEY="sk-..."
+# OPENAI_STYLE_MODEL="gpt-4o-mini"
+```
+
+Taste preferences stay in the shopper’s browser; recommendation requests send only product IDs + preference chips (no account required).
+
 
 ## 3. Deploy checklist
 

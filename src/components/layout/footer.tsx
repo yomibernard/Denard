@@ -4,6 +4,7 @@ import { DenardLogo } from "@/components/brand/denard-logo";
 import { buildWhatsAppUrl, generalAssistanceMessage } from "@/lib/whatsapp";
 
 const HELP_LINKS = [
+  { href: "/style", label: "Style profile" },
   { href: "/how-to-order", label: "How to order" },
   { href: "/delivery", label: "Delivery" },
   { href: "/returns", label: "Returns" },

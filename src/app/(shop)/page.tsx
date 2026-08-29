@@ -7,6 +7,7 @@ import { MediaVideo } from "@/components/home/media-video";
 import { SectionHeader } from "@/components/home/section-header";
 import { ProductGrid } from "@/components/product/product-grid";
 import { RecentlyViewedRail } from "@/components/product/recently-viewed-rail";
+import { ForYouRail } from "@/components/style/for-you-rail";
 import { buttonClassName } from "@/components/ui/button";
 import {
   getActiveBanners,
@@ -386,13 +387,13 @@ export default async function HomePage() {
                 },
                 {
                   icon: MessageCircle,
-                  title: "WhatsApp-assisted shopping",
-                  body: "Ask about fit, fabric and fulfilment. A Denard representative guides your order.",
+                  title: "Style that learns with you",
+                  body: "Browse, save and set your taste — Denard proposes pieces that fit, then finishes on WhatsApp or card checkout.",
                 },
                 {
                   icon: Truck,
                   title: "Clear fulfilment",
-                  body: "Availability, total cost and delivery are confirmed with you before payment.",
+                  body: "Availability, total cost and delivery are confirmed with you before or after payment.",
                 },
               ].map((item) => (
                 <div key={item.title}>
@@ -571,6 +572,7 @@ export default async function HomePage() {
         />
       ) : null}
 
+      <ForYouRail />
       <RecentlyViewedRail />
 
       {sectionOn("newsletter") ? (
