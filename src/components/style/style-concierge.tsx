@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -64,7 +64,11 @@ export function StyleConcierge({ phone }: { phone: string }) {
   const setBudgetMax = useStylePrefs((s) => s.setBudgetMax);
   const recent = useRecentlyViewed((s) => s.productIds);
   const wishlist = useWishlist((s) => s.ids);
-  const bagIds = useEnquiryBasket((s) => s.items.map((i) => i.productId));
+  const bagItems = useEnquiryBasket((s) => s.items);
+  const bagIds = useMemo(
+    () => bagItems.map((i) => i.productId),
+    [bagItems],
+  );
 
   useEffect(() => {
     if (!open) return;
