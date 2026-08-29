@@ -107,7 +107,7 @@ export function StyleConcierge({ phone }: { phone: string }) {
   const waMessage = [
     "Hello Denard,",
     "",
-    "I’d like a personal style edit.",
+    "I’d like a personal style edit from The Denard Stylist.",
     "",
     `My taste: ${summarizePrefs(prefs)}`,
     note.trim() ? `Note: ${note.trim()}` : null,
@@ -132,7 +132,7 @@ export function StyleConcierge({ phone }: { phone: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Open style concierge"
+        aria-label="Open The Denard Stylist"
         className={cn(
           "fixed bottom-36 right-4 z-40 flex h-11 w-11 items-center justify-center",
           "bg-ink text-canvas ring-1 ring-ink/10",
@@ -161,10 +161,10 @@ export function StyleConcierge({ phone }: { phone: string }) {
             <div className="flex items-start justify-between border-b border-line px-4 py-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
-                  Style concierge
+                  The Denard Stylist
                 </p>
                 <h2 id="style-concierge-title" className="mt-1 font-display text-2xl text-ink">
-                  What works for you
+                  Your personal edit
                 </h2>
               </div>
               <button
@@ -180,7 +180,8 @@ export function StyleConcierge({ phone }: { phone: string }) {
             <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4 text-sm">
               <p className="text-ink-soft">
                 We use what you browse, save and tell us — then propose pieces that fit your taste.
-                Preferences stay on this device.
+                Preferences stay on this device. Tell us your style → see your edit → speak to a stylist
+                → buy.
               </p>
 
               <div>
@@ -330,7 +331,7 @@ export function StyleConcierge({ phone }: { phone: string }) {
                   className={buttonClassName({ variant: "whatsapp", className: "w-full" })}
                   onClick={() => trackEvent({ eventName: "style_whatsapp_handoff" })}
                 >
-                  Continue on WhatsApp
+                  Continue with a Style Adviser
                 </a>
               ) : null}
               <Link
@@ -338,7 +339,7 @@ export function StyleConcierge({ phone }: { phone: string }) {
                 className={buttonClassName({ variant: "outline", className: "w-full" })}
                 onClick={() => setOpen(false)}
               >
-                Full style profile
+                Full stylist profile
               </Link>
             </div>
           </div>

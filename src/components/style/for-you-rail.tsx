@@ -94,8 +94,8 @@ export function ForYouRail({
       </div>
       <p className="mt-4 text-center text-sm text-muted">
         <Link href="/style" className="text-accent hover:underline">
-          Manage your style profile
-        </Link>
+            Manage The Denard Stylist
+          </Link>
       </p>
     </>
   );

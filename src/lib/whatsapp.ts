@@ -236,8 +236,20 @@ export function generalAssistanceMessage() {
   return [
     "Hello Denard,",
     "",
-    "I am browsing your website and would like assistance with your products.",
-    "Please help me with availability, pricing and ordering.",
+    "I am browsing your website and would like private shopping assistance.",
+    "Please help me choose pieces, confirm availability and arrange ordering.",
+    "",
+    "Thank you.",
+  ].join("\n");
+}
+
+/** Private Shopping / Style Adviser opener — aspirational, not support-desk tone. */
+export function privateShoppingMessage() {
+  return [
+    "Hello Denard,",
+    "",
+    "I would like to speak with a Denard Style Adviser for private shopping.",
+    "Please help me choose, combine and secure the right pieces.",
     "",
     "Thank you.",
   ].join("\n");

@@ -1,5 +1,6 @@
 import { SiteShell } from "@/components/layout/site-shell";
 import { getNavigationTree, getSiteSetting } from "@/lib/catalogue";
+import { filterPrimaryDepartments } from "@/lib/brand-focus";
 import { getWhatsAppPhone } from "@/lib/whatsapp-server";
 
 /** Avoid needing DATABASE_URL during `next build` page data collection on Vercel. */
@@ -16,7 +17,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
       getSiteSetting("business_address", "England, United Kingdom"),
     ]);
 
-  const navDepartments = departments.map((d) => ({
+  const nav = filterPrimaryDepartments(departments).map((d) => ({
     id: d.id,
     name: d.name,
     slug: d.slug,
@@ -30,7 +31,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
 
   return (
     <SiteShell
-      departments={navDepartments}
+      departments={nav}
       whatsappPhone={whatsappPhone}
       businessPhone={businessPhone}
       serviceHours={serviceHours}

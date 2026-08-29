@@ -13,7 +13,8 @@ import {
   Columns2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { buildWhatsAppUrl, generalAssistanceMessage } from "@/lib/whatsapp";
+import { PRIMARY_NAV_LINKS, SECONDARY_HELP_LINKS } from "@/lib/brand-focus";
+import { buildWhatsAppUrl, privateShoppingMessage } from "@/lib/whatsapp";
 import { useCompare, useEnquiryBasket, useWishlist } from "@/store/commerce";
 import { buttonClassName } from "@/components/ui/button";
 import { SearchDialog } from "@/components/search/search-dialog";
@@ -39,23 +40,8 @@ export type HeaderProps = {
   className?: string;
 };
 
-const NAV_LINKS = [
-  { href: "/shop", label: "Shop" },
-  { href: "/shop?isNew=1", label: "New" },
-  { href: "/shop?isBestSeller=1", label: "Best Sellers" },
-  { href: "/shop?isOnOffer=1", label: "Offers" },
-  { href: "/style", label: "For you" },
-  { href: "/how-to-order", label: "How to order" },
-  { href: "/track", label: "Track" },
-] as const;
-
-const HELP_LINKS = [
-  { href: "/style", label: "Style profile" },
-  { href: "/how-to-order", label: "How to order" },
-  { href: "/track", label: "Track enquiry" },
-  { href: "/wishlist", label: "Wishlist" },
-  { href: "/faq", label: "FAQ" },
-] as const;
+const NAV_LINKS = PRIMARY_NAV_LINKS;
+const HELP_LINKS = SECONDARY_HELP_LINKS;
 
 export function Header({ departments = [], whatsappPhone = "", className }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
@@ -121,7 +107,7 @@ export function Header({ departments = [], whatsappPhone = "", className }: Head
   }, [deptOpen]);
 
   const waHref = whatsappPhone
-    ? buildWhatsAppUrl(whatsappPhone, generalAssistanceMessage())
+    ? buildWhatsAppUrl(whatsappPhone, privateShoppingMessage())
     : "#";
 
   return (
@@ -184,7 +170,7 @@ export function Header({ departments = [], whatsappPhone = "", className }: Head
                     }
                   }}
                 >
-                  Departments
+                  Categories
                   <ChevronDown
                     className={cn("h-3.5 w-3.5 transition-transform", deptOpen && "rotate-180")}
                     strokeWidth={1.75}
@@ -257,10 +243,10 @@ export function Header({ departments = [], whatsappPhone = "", className }: Head
                 buttonClassName({ variant: "whatsapp", size: "sm" }),
                 "hidden md:inline-flex",
               )}
-              aria-label="Chat on WhatsApp"
+              aria-label="Private Shopping"
             >
               <MessageCircle className="h-4 w-4" strokeWidth={1.75} />
-              WhatsApp
+              Private Shopping
             </a>
 
             <Link
@@ -378,7 +364,7 @@ export function Header({ departments = [], whatsappPhone = "", className }: Head
             {departments.length > 0 ? (
               <div className="mt-6 border-t border-line pt-5">
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-muted">
-                  Departments
+                  Shop focus
                 </p>
                 <ul className="space-y-1">
                   {departments.map((dept) => {
@@ -441,7 +427,7 @@ export function Header({ departments = [], whatsappPhone = "", className }: Head
               onClick={() => setMobileOpen(false)}
             >
               <MessageCircle className="h-4 w-4" />
-              Chat on WhatsApp
+              Speak to a Style Adviser
             </a>
           </nav>
         </aside>

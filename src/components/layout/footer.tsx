@@ -1,17 +1,10 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { SECONDARY_HELP_LINKS } from "@/lib/brand-focus";
 import { DenardLogo } from "@/components/brand/denard-logo";
-import { buildWhatsAppUrl, generalAssistanceMessage } from "@/lib/whatsapp";
+import { buildWhatsAppUrl, privateShoppingMessage } from "@/lib/whatsapp";
 
-const HELP_LINKS = [
-  { href: "/style", label: "Style profile" },
-  { href: "/how-to-order", label: "How to order" },
-  { href: "/delivery", label: "Delivery" },
-  { href: "/returns", label: "Returns" },
-  { href: "/faq", label: "FAQs" },
-  { href: "/track", label: "Track enquiry" },
-  { href: "/contact", label: "Contact" },
-] as const;
+const HELP_LINKS = SECONDARY_HELP_LINKS;
 
 const LEGAL_LINKS = [
   { href: "/privacy", label: "Privacy" },
@@ -48,7 +41,7 @@ export function Footer({
   const year = new Date().getFullYear();
   const waDigits = (whatsappPhone || phone).replace(/\D/g, "");
   const waHref = waDigits
-    ? buildWhatsAppUrl(waDigits, generalAssistanceMessage())
+    ? buildWhatsAppUrl(waDigits, privateShoppingMessage())
     : undefined;
   const waLabel = formatDisplayPhone(waDigits || phone);
 
@@ -58,8 +51,8 @@ export function Footer({
         <div className="sm:col-span-2 lg:col-span-1">
           <DenardLogo variant="slogan" href="/" onDark className="!h-28 w-auto md:!h-36" />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/70">
-            Premium contemporary fashion from England, UK — timeless style, curated products and
-            accessible elegance, with WhatsApp-assisted shopping.
+            Contemporary fashion and accessories, curated in Britain for a global audience —
+            distinctive pieces, private shopping, accessible premium.
           </p>
           {serviceHours ? (
             <p className="mt-4 text-xs text-white/50">Service hours: {serviceHours}</p>
@@ -137,7 +130,7 @@ export function Footer({
                   rel="noopener noreferrer"
                   className="hover:text-white"
                 >
-                  WhatsApp {waLabel}
+                  Private Shopping {waLabel}
                 </a>
               </li>
             ) : null}

@@ -65,13 +65,13 @@ export default function StylePageClient() {
       <section className="border-b border-line bg-gradient-to-b from-sand/80 to-canvas">
         <div className="container-denard py-12 md:py-16">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
-            Taste & fashion
+            The Denard Stylist
           </p>
           <h1 className="mt-3 font-display text-4xl text-ink md:text-5xl">Your style profile</h1>
           <p className="mt-4 max-w-2xl text-ink-soft">
-            Denard learns from what you browse and save, then proposes pieces that fit. Set your
-            metals, vibe and occasions here — preferences stay on this device and power{" "}
-            <strong className="font-medium text-ink">For you</strong> recommendations across the shop.
+            Tell us your style — metals, vibe and occasions — then see your Denard Edit. Preferences
+            stay on this device and power recommendations across the shop. Framework: Discover.
+            Curate. Connect.
           </p>
           <p className="mt-3 text-sm text-muted">Current edit: {summary}</p>
           {savedFlash ? (

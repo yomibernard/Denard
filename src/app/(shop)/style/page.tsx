@@ -4,9 +4,9 @@ import { buildPageMetadata } from "@/lib/seo";
 import StylePageClient from "./style-client";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Your style profile",
+  title: "Your Denard Edit",
   description:
-    "Tell Denard your taste — metals, vibe and occasions — and get personalised jewellery and fashion proposals.",
+    "Tell Denard your taste — metals, vibe and occasions — and get a personal fashion edit. Discover. Curate. Connect.",
   path: "/style",
 });
 

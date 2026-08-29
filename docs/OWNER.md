@@ -118,9 +118,14 @@ Create staff under **Admin → Users**. Never share the owner password.
 2. Store the file securely (contains customer phone numbers)
 
 ### Style Concierge (automated taste proposals)
-1. On the shop, use the sparkle button (above WhatsApp) or open **/style**
+1. On the shop, use the sparkle button (above WhatsApp) or open **/style** — **The Denard Stylist**
 2. Customers set metals / vibe / occasions / budget on their device
-3. Homepage and product pages show a **For you** rail from browse + wishlist + prefs
-4. **Continue on WhatsApp** sends their taste summary + proposed SKUs to you
+3. Homepage and product pages show a **For you / Denard Edit** rail from browse + wishlist + prefs
+4. **Continue with a Style Adviser** sends their taste summary + proposed SKUs on WhatsApp
 5. Optional: ask your developer to set `OPENAI_API_KEY` for richer written advice (matching still works without it)
+
+### Brand focus (fashion house)
+1. Primary shop focus is Fashion / Jewellery / Bags / Accessories — Home & Beauty are hidden from nav
+2. Demo SKUs (moisturiser, blanket, lamp, generic shirt) should stay **Draft** unless intentionally relaunched
+3. Re-run `npx tsx scripts/apply-brand-focus.ts` after reseeding if those items reappear
 

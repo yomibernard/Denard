@@ -11,7 +11,8 @@
 | A5 | Live jewellery uses real photos (R2/CDN) | Active — avoid SVG placeholders for published jewellery |
 | A6 | Moderated product reviews on PDPs | Active |
 | A7 | Multi-currency / i18n deferred | Schema has `currency` for later |
-| A8 | Behavioural style personalization | Active — on-device taste prefs + browse/wishlist seeds → For you / Style Concierge; optional OpenAI polish |
+| A8 | Behavioural style personalization | Active — **The Denard Stylist** (on-device prefs + browse seeds); optional OpenAI polish |
+| A9 | Brand focus: fashion & accessories | Active — primary nav hides Home & Beauty; diluting demo SKUs unpublished via `scripts/apply-brand-focus.ts` |
 
 ## 2. Architecture
 
@@ -66,5 +67,6 @@ Operating guides: `docs/OWNER.md` (business), `docs/PRODUCTION.md` (hosting).
 | 1 | WhatsApp catalogue + enquiry |
 | 2 | Merchandising, analytics, CRM exports |
 | 3 | On-site Stripe Checkout from bag (**shipped**) |
-| 4 | Style Concierge + behaviour recommendations (**shipped**) |
-| 5 | Optional: logged-in taste profiles, email nurture, admin relation editor |
+| 4 | Style Concierge + behaviour recommendations (**shipped**; renamed **The Denard Stylist** in brand Phase 1) |
+| 5 | Brand correction — fashion-house focus, editorial homepage, private shopping (**in progress**) |
+| 6 | Optional: logged-in taste profiles, email nurture, admin relation editor, Africa/diaspora scale |

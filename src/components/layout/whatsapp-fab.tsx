@@ -3,7 +3,7 @@
 import { MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { trackEvent } from "@/lib/analytics";
-import { buildWhatsAppUrl, generalAssistanceMessage } from "@/lib/whatsapp";
+import { buildWhatsAppUrl, privateShoppingMessage } from "@/lib/whatsapp";
 
 export type WhatsAppFabProps = {
   phone: string;
@@ -13,14 +13,14 @@ export type WhatsAppFabProps = {
 export function WhatsAppFab({ phone, className }: WhatsAppFabProps) {
   if (!phone) return null;
 
-  const href = buildWhatsAppUrl(phone, generalAssistanceMessage());
+  const href = buildWhatsAppUrl(phone, privateShoppingMessage());
 
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Chat on WhatsApp with Denard"
+      aria-label="Speak to a Denard Style Adviser"
       onClick={() => trackEvent({ eventName: "whatsapp_fab_click" })}
       className={cn(
         "fixed bottom-20 right-4 z-40 flex h-11 w-11 items-center justify-center",
